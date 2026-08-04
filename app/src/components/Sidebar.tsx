@@ -28,8 +28,8 @@ export const Sidebar: FC<Props> = ({ onClose, onNavigate, currentScreen }) => {
       {/* Header */}
       <div className="p-4 border-b border-divider">
         <div className="text-3xl">📚</div>
-        <div className="font-bold text-accent text-lg mt-2">AllBootcamp</div>
-        <div className="text-text-dim text-xs mt-1">Self-Study Hub · 6 bootcamps · 495 courses</div>
+        <div className="font-bold text-accent text-lg mt-2">修學旅行</div>
+        <div className="text-text-dim text-xs mt-1">Self-Study Hub · 6 bootcamps · 519 courses</div>
       </div>
 
       {/* Main nav */}

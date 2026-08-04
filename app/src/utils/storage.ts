@@ -19,8 +19,8 @@ export interface Course {
 }
 
 // Local storage helpers for following/saved
-const FOLLOW_KEY = 'allbootcamp_follow'
-const SAVED_KEY = 'allbootcamp_saved'
+const FOLLOW_KEY = 'study_tour_follow'
+const SAVED_KEY = 'study_tour_saved'
 
 export function loadFollow(): Set<string> {
   try {

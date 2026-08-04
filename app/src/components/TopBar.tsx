@@ -34,7 +34,7 @@ export const TopBar: FC<Props> = ({ screen, searchQuery, onSearchChange, onMenu,
       ) : (
         <div className="flex-1 text-center font-bold text-sm">
           <span className="text-accent">⚡</span>{' '}
-          <span className="text-text">AllBootcamp</span>
+          <span className="text-text">修學旅行</span>
         </div>
       )}
       <button onClick={onFilter} className="px-3 py-2 text-accent text-2xl tap-active">≡</button>

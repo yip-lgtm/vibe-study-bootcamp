@@ -1,7 +1,7 @@
 {
-  "name": "AllBootcamp",
-  "short_name": "AllBootcamp",
-  "description": "Self-Study Bootcamp Hub — 495 courses from 6 bootcamps",
+  "name": "修學旅行",
+  "short_name": "修學旅行",
+  "description": "Self-Study Bootcamp Hub — 519 courses from 6 bootcamps",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#000000",
