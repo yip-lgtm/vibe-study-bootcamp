@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #000000;
+  --color-card: #0a0a0a;
+  --color-accent: #FFB800;
+  --color-text: #e5e5e5;
+  --color-text-dim: #888888;
+  --color-divider: #1a1a1a;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #000;
+  color: #e5e5e5;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang HK", "Microsoft JhengHei", sans-serif;
+  overscroll-behavior: none;
+}
+
+body {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Custom scrollbar - hidden but scrollable */
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Slide-in animation */
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+.slide-in-left { animation: slideInLeft 0.25s ease-out; }
+.slide-in-right { animation: slideInRight 0.25s ease-out; }
+
+/* Tap feedback */
+.tap-active:active {
+  background: rgba(255, 184, 0, 0.08);
+}
+
+/* Yellow flash text (recent highlight) */
+.flash-yellow {
+  animation: flashYellow 2s ease-out;
+}
+@keyframes flashYellow {
+  0%, 100% { color: #FFB800; }
+  50% { color: #e5e5e5; }
+}
