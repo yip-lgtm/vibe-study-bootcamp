@@ -19,6 +19,7 @@ export default function App() {
 
   // Filters
   const [filterCategory, setFilterCategory] = useState<string>('all')
+  const [filterSubcategory, setFilterSubcategory] = useState<string>('all')
   const [filterHasScholars, setFilterHasScholars] = useState(false)
   const [filterHasEquations, setFilterHasEquations] = useState(false)
   const [filterMinLines, setFilterMinLines] = useState(0)
@@ -61,6 +62,11 @@ export default function App() {
       result = result.filter(c => c.category === filterCategory)
     }
 
+    // Subcategory filter (drill-down within category)
+    if (filterSubcategory !== 'all') {
+      result = result.filter(c => c.subcategory === filterSubcategory)
+    }
+
     // Quality filters
     if (filterHasScholars) {
       result = result.filter(c => c.scholars.length > 0)
@@ -82,7 +88,19 @@ export default function App() {
     }
 
     return result
-  }, [courses, screen, searchQuery, filterCategory, filterHasScholars, filterHasEquations, filterMinLines, sortBy, followed, saved])
+  }, [courses, screen, searchQuery, filterCategory, filterSubcategory, filterHasScholars, filterHasEquations, filterMinLines, sortBy, followed, saved])
+
+  // Compute available subcategories for current category
+  const subcategoryCounts = useMemo(() => {
+    const map: Record<string, number> = { all: 0 }
+    const pool = filterCategory === 'all' ? courses : courses.filter(c => c.category === filterCategory)
+    for (const c of pool) {
+      const sub = c.subcategory || 'Other'
+      map[sub] = (map[sub] || 0) + 1
+    }
+    map.all = pool.length
+    return map
+  }, [courses, filterCategory])
 
   const handleCourseClick = (course: Course) => {
     setSelectedCourse(course)
@@ -176,7 +194,10 @@ export default function App() {
             <FilterPanel
               onClose={() => setSidePanel(null)}
               category={filterCategory}
-              setCategory={setFilterCategory}
+              setCategory={(s) => { setFilterCategory(s); setFilterSubcategory('all') }}
+              subcategory={filterSubcategory}
+              setSubcategory={setFilterSubcategory}
+              subcategoryCounts={subcategoryCounts}
               hasScholars={filterHasScholars}
               setHasScholars={setFilterHasScholars}
               hasEquations={filterHasEquations}

@@ -4,6 +4,9 @@ interface Props {
   onClose: () => void
   category: string
   setCategory: (s: string) => void
+  subcategory: string
+  setSubcategory: (s: string) => void
+  subcategoryCounts: Record<string, number>
   hasScholars: boolean
   setHasScholars: (b: boolean) => void
   hasEquations: boolean
@@ -26,9 +29,15 @@ const CATEGORIES = [
 ]
 
 export const FilterPanel: FC<Props> = ({
-  onClose, category, setCategory, hasScholars, setHasScholars,
+  onClose, category, setCategory, subcategory, setSubcategory, subcategoryCounts,
+  hasScholars, setHasScholars,
   hasEquations, setHasEquations, minLines, setMinLines, sortBy, setSortBy, counts,
 }) => {
+  // Show subcategory selector when BME is selected (or any category with subs)
+  const showSubcategory = category !== 'all' && Object.keys(subcategoryCounts).length > 1
+  const sortedSubs = Object.keys(subcategoryCounts)
+    .filter(k => k !== 'all')
+    .sort((a, b) => subcategoryCounts[b] - subcategoryCounts[a])
   return (
     <div className="h-full bg-black flex flex-col">
       {/* Header */}
@@ -62,6 +71,38 @@ export const FilterPanel: FC<Props> = ({
             ))}
           </div>
         </div>
+
+        {/* Subcategory - drill-down */}
+        {showSubcategory && (
+          <div>
+            <div className="text-text-faint text-xs font-bold mb-2 uppercase">
+              子類別 Subcategory <span className="text-text-faint">({subcategoryCounts.all} total)</span>
+            </div>
+            <div className="space-y-1">
+              <button
+                onClick={() => setSubcategory('all')}
+                className={`w-full text-left px-3 py-1.5 rounded text-xs tap-active ${
+                  subcategory === 'all' ? 'bg-pill-bg text-accent' : 'text-text-dim'
+                }`}
+              >
+                ↳ 全部 subcategories
+                <span className="float-right text-text-faint">{subcategoryCounts.all}</span>
+              </button>
+              {sortedSubs.map(sub => (
+                <button
+                  key={sub}
+                  onClick={() => setSubcategory(sub)}
+                  className={`w-full text-left px-3 py-1.5 rounded text-xs tap-active ${
+                    subcategory === sub ? 'bg-pill-bg text-accent' : 'text-text-dim'
+                  }`}
+                >
+                  ↳ {sub}
+                  <span className="float-right text-text-faint">{subcategoryCounts[sub]}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Quality filters */}
         <div>

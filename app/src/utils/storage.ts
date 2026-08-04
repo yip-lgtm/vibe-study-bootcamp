@@ -4,6 +4,9 @@ export interface Course {
   title: string
   repo: string
   category: string
+  subcategory?: string
+  course_code?: string
+  week?: string
   path: string
   url: string
   lines: number

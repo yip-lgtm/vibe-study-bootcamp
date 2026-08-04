@@ -91,6 +91,16 @@ export const CourseList: FC<Props> = ({
                     <span className={`${catColor} text-xs px-1.5 py-0.5 rounded font-bold`}>
                       {c.category}
                     </span>
+                    {c.subcategory && (
+                      <span className="bg-zinc-800 text-zinc-400 text-[10px] px-1.5 py-0.5 rounded">
+                        {c.subcategory}
+                      </span>
+                    )}
+                    {c.course_code && (
+                      <span className="text-text-faint text-[10px] font-mono">
+                        {c.course_code}
+                      </span>
+                    )}
                     <span className="text-text-faint text-xs">· {formatTimeAgo(c.repo)}</span>
                   </div>
                   {/* Title - bilingual friendly */}
