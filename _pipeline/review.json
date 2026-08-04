@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "last_run": "2026-08-04T16:05:00Z",
+  "summary": {
+    "total_courses": 495,
+    "approved": 495,
+    "revise": 0,
+    "reject": 0,
+    "approval_rate": 1.0
+  },
+  "by_bootcamp": [
+    {"name": "civil-bootcamp", "total": 85, "approved": 85, "rate": 1.0, "head": "40f0c28"},
+    {"name": "PhysicsSelfStudy", "total": 18, "approved": 18, "rate": 1.0, "head": "73dd041", "branch": "master"},
+    {"name": "HKU-Harvard-History-Self-Study", "total": 155, "approved": 155, "rate": 1.0, "head": "2783b01"},
+    {"name": "psych-self-study-hku", "total": 131, "approved": 131, "rate": 1.0, "head": "f6b3c91"},
+    {"name": "mech-Eng-Bootcamp", "total": 100, "approved": 100, "rate": 1.0, "head": "1c30c63"},
+    {"name": "HKU-BME-Bootcamp-OpenClaw", "total": 6, "approved": 6, "rate": 1.0, "head": "b7347b1"}
+  ],
+  "quality_gates": {
+    "G1_length": {"weight": 10, "description": "File >= 300 lines"},
+    "G2_format": {"weight": 15, "description": "5MM/3DG/10Q/5DD/10SL/5MR structure"},
+    "G3_citations": {"weight": 15, "description": "Real scholars with years"},
+    "G4_specificity": {"weight": 15, "description": "Equations + numbers"},
+    "G5_bilingual": {"weight": 10, "description": "中英對照 >= 100 chars"},
+    "G6_no_placeholder": {"weight": 10, "description": "No [TBD], Lorem, 待補充"},
+    "G7_mermaid": {"weight": 10, "description": ">= 5 Mermaid diagrams"},
+    "G8_solutions": {"weight": 10, "description": ">= 10 detailed solutions"},
+    "G9_deep_dives": {"weight": 5, "description": ">= 5 specific deep dives"},
+    "G10_no_template": {"weight": 5, "description": "No T0/T1/T2 template"}
+  },
+  "decisions": {
+    "approved_threshold": 85,
+    "revise_threshold": 70,
+    "policy": "不通過不推送 (no push without APPROVED)"
+  }
+}
