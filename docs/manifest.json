@@ -1,0 +1,17 @@
+{
+  "name": "AllBootcamp",
+  "short_name": "AllBootcamp",
+  "description": "Self-Study Bootcamp Hub — 495 courses from 6 bootcamps",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#FFB800",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
