@@ -6,6 +6,8 @@
   --color-accent: #FFB800;
   --color-text: #e5e5e5;
   --color-text-dim: #888888;
+  --color-text-faint: #666666;   /* 新增 */
+  --color-pill-bg: #1a1a1a;      /* 新增 */
   --color-divider: #1a1a1a;
 }
 
