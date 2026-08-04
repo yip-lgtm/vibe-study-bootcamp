@@ -16,6 +16,7 @@ export default function App() {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
   const [sidePanel, setSidePanel] = useState<SidePanel>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [showAddModal, setShowAddModal] = useState(false)
 
   // Filters
   const [filterCategory, setFilterCategory] = useState<string>('all')
@@ -159,6 +160,7 @@ export default function App() {
             setScreen(s)
             setSidePanel(null)
           }}
+          onAdd={() => setShowAddModal(true)}
           followingCount={followed.size}
           savedCount={saved.size}
         />
@@ -208,6 +210,59 @@ export default function App() {
               setSortBy={setSortBy}
               counts={coursesData.by_category as Record<string, number>}
             />
+          </div>
+        </>
+      )}
+
+      {/* Quick Add / Request Course Modal */}
+      {showAddModal && (
+        <>
+          <div
+            className="absolute inset-0 bg-black/70 z-50"
+            onClick={() => setShowAddModal(false)}
+          />
+          <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 z-50 bg-card border border-divider rounded-xl p-5 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-accent">＋ 快速新增 / 申請課程</h2>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-text-dim text-2xl leading-none tap-active px-1"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            <p className="text-text-dim text-sm mb-4 leading-relaxed">
+              想加入新嘅 bootcamp 或課程？暫時係 placeholder。
+              <br />
+              之後可以喺度填表、提交 request，或者直接連結去 GitHub issue。
+            </p>
+
+            <div className="space-y-3">
+              <input
+                type="text"
+                placeholder="課程名稱 / Course title"
+                className="w-full bg-pill-bg text-text placeholder-text-faint px-3 py-2.5 rounded text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+                disabled
+              />
+              <textarea
+                placeholder="簡述原因 / Why do you need this course?"
+                rows={3}
+                className="w-full bg-pill-bg text-text placeholder-text-faint px-3 py-2.5 rounded text-sm focus:outline-none focus:ring-1 focus:ring-accent resize-none"
+                disabled
+              />
+              <button
+                className="w-full py-2.5 rounded font-bold text-sm bg-accent text-black opacity-60 cursor-not-allowed"
+                disabled
+              >
+                提交申請（即將開放）
+              </button>
+            </div>
+
+            <p className="text-text-faint text-xs mt-4 text-center">
+              Placeholder modal · 功能稍後實作
+            </p>
           </div>
         </>
       )}
