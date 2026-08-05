@@ -1,6 +1,8 @@
 import type { FC } from 'react'
 import type { Course } from '../utils/storage'
 
+export type ListMode = 'mixed' | 'daily' | 'weekly'
+
 interface Props {
   courses: Course[]
   followed: Set<string>
@@ -10,6 +12,8 @@ interface Props {
   onSave: (id: string) => void
   totalCount: number
   screen: string
+  listMode: ListMode
+  onListModeChange: (m: ListMode) => void
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -21,46 +25,63 @@ const CATEGORY_COLORS: Record<string, string> = {
   BME: 'bg-emerald-900/40 text-emerald-300',
 }
 
-const formatTimeAgo = (repo: string) => {
-  // Mock time display - "11m" style
-  return '11m'
-}
+const formatTimeAgo = (_repo: string) => '11m'
 
-const formatComments = (lines: number) => {
-  // Pseudo-random based on lines for stable display
-  return Math.floor((lines * 13) % 999) + 10
-}
+const formatComments = (lines: number) => Math.floor((lines * 13) % 999) + 10
 
-const formatLikes = (lines: number) => {
-  return Math.floor((lines * 7) % 100) - 30
-}
+const formatLikes = (lines: number) => Math.floor((lines * 7) % 100) - 30
 
 export const CourseList: FC<Props> = ({
-  courses, followed, saved, onCourseClick, onFollow, onSave, totalCount, screen,
+  courses, followed, saved, onCourseClick, onFollow, onSave,
+  totalCount, screen, listMode, onListModeChange,
 }) => {
-  const getHeaderText = () => {
-    if (screen === 'following') return { left: '追蹤中 Following', center: '今日 Today' }
-    if (screen === 'saved') return { left: '收藏 Saved', center: '今日 Today' }
-    if (screen === 'search') return { left: '搜尋 Search', center: '結果 Results' }
-    return { left: '即時熱門', center: '今日熱門' }
-  }
-  const hdr = getHeaderText()
+  // Only show ranking tabs on home screen
+  const showRankingTabs = screen === 'home'
+
+  const tabs: { id: ListMode; label: string }[] = [
+    { id: 'mixed', label: '即時熱門' },
+    { id: 'daily', label: '今日熱門' },
+    { id: 'weekly', label: '本週精選' },
+  ]
 
   return (
     <div className="flex-1 overflow-y-auto pb-16">
       {/* Tabs row */}
       <div className="sticky top-0 bg-black z-10 flex border-b border-divider">
-        <div className="flex-1 text-center py-2 text-sm text-text-faint">{hdr.left}</div>
-        <div className="flex-1 text-center py-2 text-sm text-text-faint border-b-2 border-accent text-accent">
-          {hdr.center}
-        </div>
-        <div className="flex-1 text-center py-2 text-sm text-text-faint">本週精選</div>
+        {showRankingTabs ? (
+          tabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => onListModeChange(t.id)}
+              className={`flex-1 text-center py-2 text-sm tap-active ${
+                listMode === t.id
+                  ? 'border-b-2 border-accent text-accent'
+                  : 'text-text-faint'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))
+        ) : (
+          <>
+            <div className="flex-1 text-center py-2 text-sm text-text-faint">
+              {screen === 'following' ? '追蹤中' : screen === 'saved' ? '收藏' : '搜尋'}
+            </div>
+            <div className="flex-1 text-center py-2 text-sm text-accent border-b-2 border-accent">
+              {screen === 'search' ? '結果' : '列表'}
+            </div>
+            <div className="flex-1" />
+          </>
+        )}
       </div>
 
       {/* Result count */}
       <div className="px-4 py-2 text-xs text-text-faint border-b border-divider">
         {courses.length} of {totalCount} courses
         {screen === 'search' && ' · filtered'}
+        {showRankingTabs && listMode === 'daily' && ' · 今日洗牌'}
+        {showRankingTabs && listMode === 'weekly' && ' · 本週洗牌'}
+        {showRankingTabs && listMode === 'mixed' && ' · 混合穿插'}
       </div>
 
       {/* Course list */}
@@ -83,7 +104,6 @@ export const CourseList: FC<Props> = ({
               className="px-4 py-3 border-b border-divider tap-active"
               onClick={() => onCourseClick(c)}
             >
-              {/* Top row: title + category badge */}
               <div className="flex items-start gap-2">
                 <span className="text-accent text-base mt-0.5 flex-shrink-0">⚡</span>
                 <div className="flex-1 min-w-0">
@@ -103,7 +123,6 @@ export const CourseList: FC<Props> = ({
                     )}
                     <span className="text-text-faint text-xs">· {formatTimeAgo(c.repo)}</span>
                   </div>
-                  {/* Title - bilingual friendly */}
                   <div className="mt-1.5 text-text text-[15px] leading-snug font-medium">
                     {c.title}
                   </div>
@@ -126,23 +145,23 @@ export const CourseList: FC<Props> = ({
                 </div>
               </div>
 
-              {/* Stats row - like 196 comments and -177 dislikes */}
               <div className="flex items-center justify-end gap-3 mt-2 text-xs text-text-dim">
                 <span className="flex items-center gap-1">
                   💬 {comments} <span className="text-text-faint">comment</span>
                 </span>
                 <span className={`flex items-center gap-1 ${likes < 0 ? 'text-red-400' : 'text-text-dim'}`}>
-                  {likes < 0 ? '👎' : '👍'} {Math.abs(likes)} <span className="text-text-faint">{c.lines}L</span>
+                  {likes < 0 ? '👎' : '👍'} {Math.abs(likes)}{' '}
+                  <span className="text-text-faint">{c.lines}L</span>
                 </span>
                 <span className="text-text-faint text-[10px]">
                   {c.equations}eq · {c.scholars.length}sch
                 </span>
               </div>
 
-              {/* First model as preview */}
               {c.models.length > 0 && (
                 <div className="mt-1.5 text-text-faint text-xs truncate">
-                  <span className="text-accent">5MM:</span> {c.models[0].replace(/\*+/g, '').slice(0, 80)}
+                  <span className="text-accent">5MM:</span>{' '}
+                  {c.models[0].replace(/\*+/g, '').slice(0, 80)}
                 </div>
               )}
             </div>
