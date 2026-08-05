@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import Giscus from '@giscus/react'
+import { useEffect, useRef } from 'react'
 
 interface Props {
   /** Unique term for this discussion (use course.id) */
@@ -14,45 +13,46 @@ const CATEGORY = 'General'
 const CATEGORY_ID = 'DIC_kwDOTt1gqc4DCs88'
 
 export function GiscusComments({ term, title = '討論 / Discussion' }: Props) {
-  const [ready, setReady] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
 
-  // Only mount after a short delay so the SPA transition is smooth
   useEffect(() => {
-    const t = setTimeout(() => setReady(true), 150)
-    return () => clearTimeout(t)
-  }, [term])
+    const container = containerRef.current
+    if (!container) return
 
-  if (!ready) {
-    return (
-      <div className="px-4 py-6 text-center text-text-faint text-sm">
-        載入討論區…
-      </div>
-    )
-  }
+    // Clear previous iframe/script when term changes
+    container.innerHTML = ''
+
+    const script = document.createElement('script')
+    script.src = 'https://giscus.app/client.js'
+    script.async = true
+    script.crossOrigin = 'anonymous'
+    script.setAttribute('data-repo', REPO)
+    script.setAttribute('data-repo-id', REPO_ID)
+    script.setAttribute('data-category', CATEGORY)
+    script.setAttribute('data-category-id', CATEGORY_ID)
+    script.setAttribute('data-mapping', 'specific')
+    script.setAttribute('data-term', term)
+    script.setAttribute('data-strict', '0')
+    script.setAttribute('data-reactions-enabled', '1')
+    script.setAttribute('data-emit-metadata', '0')
+    script.setAttribute('data-input-position', 'bottom')
+    script.setAttribute('data-theme', 'dark')
+    script.setAttribute('data-lang', 'zh-TW')
+    script.setAttribute('data-loading', 'lazy')
+
+    container.appendChild(script)
+
+    return () => {
+      container.innerHTML = ''
+    }
+  }, [term])
 
   return (
     <section className="px-4 pb-8">
       <h2 className="text-accent font-bold mb-3 flex items-center gap-2">
         💬 {title}
       </h2>
-      <div className="giscus-wrapper rounded-xl overflow-hidden">
-        <Giscus
-          id={`giscus-${term}`}
-          repo={REPO}
-          repoId={REPO_ID}
-          category={CATEGORY}
-          categoryId={CATEGORY_ID}
-          mapping="specific"
-          term={term}
-          strict="0"
-          reactionsEnabled="1"
-          emitMetadata="0"
-          inputPosition="bottom"
-          theme="dark"
-          lang="zh-TW"
-          loading="lazy"
-        />
-      </div>
+      <div className="giscus-wrapper rounded-xl overflow-hidden min-h-[120px]" ref={containerRef} />
       <p className="text-text-faint text-xs mt-3 text-center">
         討論由 GitHub Discussions 驅動 · 需要 GitHub 帳號先可以留言
       </p>
