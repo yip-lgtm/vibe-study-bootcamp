@@ -38,6 +38,24 @@ export const FilterPanel: FC<Props> = ({
   const sortedSubs = Object.keys(subcategoryCounts)
     .filter(k => k !== 'all')
     .sort((a, b) => subcategoryCounts[b] - subcategoryCounts[a])
+
+  const hasActiveFilters =
+    category !== 'all' ||
+    subcategory !== 'all' ||
+    hasScholars ||
+    hasEquations ||
+    minLines > 0 ||
+    sortBy !== 'category'
+
+  const clearAll = () => {
+    setCategory('all')
+    setSubcategory('all')
+    setHasScholars(false)
+    setHasEquations(false)
+    setMinLines(0)
+    setSortBy('category')
+  }
+
   return (
     <div className="h-full bg-black flex flex-col">
       {/* Header */}
@@ -46,7 +64,10 @@ export const FilterPanel: FC<Props> = ({
           <div className="font-bold text-accent text-lg">🔍 篩選 Filter</div>
           <button onClick={onClose} className="text-accent text-2xl tap-active px-2">×</button>
         </div>
-        <div className="text-text-dim text-xs mt-1">{counts[category] ?? 0} 個 courses</div>
+        <div className="text-text-dim text-xs mt-1">
+          {counts[category] ?? 0} 個 courses
+          {hasActiveFilters && <span className="text-accent ml-2">· 有篩選中</span>}
+        </div>
       </div>
 
       {/* Body */}
@@ -81,22 +102,22 @@ export const FilterPanel: FC<Props> = ({
             <div className="space-y-1">
               <button
                 onClick={() => setSubcategory('all')}
-                className={`w-full text-left px-3 py-1.5 rounded text-xs tap-active ${
-                  subcategory === 'all' ? 'bg-pill-bg text-accent' : 'text-text-dim'
+                className={`w-full text-left px-3 py-2 rounded text-sm tap-active ${
+                  subcategory === 'all' ? 'bg-pill-bg text-accent' : 'text-text'
                 }`}
               >
-                ↳ 全部 subcategories
+                全部
                 <span className="float-right text-text-faint">{subcategoryCounts.all}</span>
               </button>
               {sortedSubs.map(sub => (
                 <button
                   key={sub}
                   onClick={() => setSubcategory(sub)}
-                  className={`w-full text-left px-3 py-1.5 rounded text-xs tap-active ${
-                    subcategory === sub ? 'bg-pill-bg text-accent' : 'text-text-dim'
+                  className={`w-full text-left px-3 py-2 rounded text-sm tap-active ${
+                    subcategory === sub ? 'bg-pill-bg text-accent' : 'text-text'
                   }`}
                 >
-                  ↳ {sub}
+                  {sub}
                   <span className="float-right text-text-faint">{subcategoryCounts[sub]}</span>
                 </button>
               ))}
@@ -166,7 +187,15 @@ export const FilterPanel: FC<Props> = ({
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-divider">
+      <div className="p-4 border-t border-divider space-y-2">
+        {hasActiveFilters && (
+          <button
+            onClick={clearAll}
+            className="w-full py-2.5 bg-pill-bg text-text-dim text-sm rounded tap-active"
+          >
+            清除全部篩選 Clear filters
+          </button>
+        )}
         <button
           onClick={onClose}
           className="w-full py-3 bg-accent text-black font-bold rounded tap-active"

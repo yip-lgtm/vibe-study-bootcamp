@@ -1,0 +1,40 @@
+name: 🐛 Bug Report
+description: 回報 AllBootcamp PWA 或 pipeline 問題
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        請盡量提供重現步驟，方便快速修復。
+  - type: textarea
+    id: describe
+    attributes:
+      label: 問題描述
+      placeholder: 發生咗咩事？
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 重現步驟
+      placeholder: |
+        1. 去到 ...
+        2. 撳 ...
+        3. 見到 ...
+    validations:
+      required: true
+  - type: dropdown
+    id: device
+    attributes:
+      label: 裝置 / Browser
+      options:
+        - iPhone Safari (PWA)
+        - Android Chrome
+        - Desktop Chrome
+        - Desktop Safari
+        - Other
+  - type: textarea
+    id: expected
+    attributes:
+      label: 預期行為

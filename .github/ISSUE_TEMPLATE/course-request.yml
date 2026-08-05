@@ -1,0 +1,48 @@
+name: 📚 Course / Bootcamp Request
+description: 申請新增課程或整個 bootcamp
+title: "[Course Request] "
+labels: ["course-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感謝你申請新課程！請盡量填寫詳細，方便 multi-agent pipeline 處理。
+  - type: input
+    id: title
+    attributes:
+      label: 課程名稱 / Course title
+      description: 例如「BIOC3605 — Omics」或「Quantum Mechanics Self-Study」
+      placeholder: e.g. Advanced Machine Learning (CUHK)
+    validations:
+      required: true
+  - type: dropdown
+    id: type
+    attributes:
+      label: 類型
+      options:
+        - Single course
+        - Full bootcamp (多門課)
+        - Enhancement to existing course
+    validations:
+      required: true
+  - type: textarea
+    id: reason
+    attributes:
+      label: 為什麼需要？ / Why needed
+      description: 學習目標、適用人群、相關學科等
+      placeholder: 我想系統學習...
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: 建議來源 / Suggested source (optional)
+      description: 大學課程網頁、教科書、open courseware 連結
+      placeholder: https://...
+  - type: checkboxes
+    id: bilingual
+    attributes:
+      label: 語言要求
+      options:
+        - label: 需要中英對照 (Bilingual)
+          required: false

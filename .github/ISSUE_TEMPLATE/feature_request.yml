@@ -1,0 +1,29 @@
+name: ✨ Feature Request
+description: 建議新功能或 UX 改善
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 想解決咩問題？
+      placeholder: 而家用起嚟覺得...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: 建議方案
+      placeholder: 如果有...就好
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: 範圍
+      options:
+        - PWA / Frontend
+        - Multi-agent pipeline
+        - Content quality
+        - Docs / Onboarding
+        - Other
