@@ -226,9 +226,18 @@ export default function App() {
               onClose={() => setSidePanel(null)}
               onNavigate={(s) => {
                 setScreen(s)
+                setFilterCategory('all')
+                setFilterSubcategory('all')
+                setSidePanel(null)
+              }}
+              onSelectCategory={(cat) => {
+                setFilterCategory(cat)
+                setFilterSubcategory('all')
+                setScreen('home')
                 setSidePanel(null)
               }}
               currentScreen={screen}
+              currentCategory={filterCategory}
             />
           </div>
         </>

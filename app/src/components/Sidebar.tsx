@@ -3,7 +3,9 @@ import type { FC } from 'react'
 interface Props {
   onClose: () => void
   onNavigate: (s: 'home' | 'following' | 'saved' | 'search') => void
+  onSelectCategory: (category: string) => void
   currentScreen: string
+  currentCategory: string
 }
 
 const NAV = [
@@ -14,15 +16,21 @@ const NAV = [
 ]
 
 const CATS = [
-  { icon: '⚙️', label: 'Engineering' },
-  { icon: '⚛️', label: 'Physics' },
-  { icon: '📚', label: 'History' },
-  { icon: '🧠', label: 'Psychology' },
-  { icon: '🤖', label: 'Mech-Eng' },
-  { icon: '🧬', label: 'BME' },
+  { icon: '⚙️', label: 'Engineering', value: 'Engineering' },
+  { icon: '⚛️', label: 'Physics', value: 'Physics' },
+  { icon: '📚', label: 'History', value: 'History' },
+  { icon: '🧠', label: 'Psychology', value: 'Psychology' },
+  { icon: '🤖', label: 'Mech-Eng', value: 'Mech-Eng' },
+  { icon: '🧬', label: 'BME', value: 'BME' },
 ]
 
-export const Sidebar: FC<Props> = ({ onClose, onNavigate, currentScreen }) => {
+export const Sidebar: FC<Props> = ({
+  onClose,
+  onNavigate,
+  onSelectCategory,
+  currentScreen,
+  currentCategory,
+}) => {
   return (
     <div className="h-full bg-black flex flex-col">
       {/* Header */}
@@ -39,11 +47,15 @@ export const Sidebar: FC<Props> = ({ onClose, onNavigate, currentScreen }) => {
             key={item.label}
             onClick={() => onNavigate(item.screen)}
             className={`w-full flex items-center gap-3 px-5 py-3 text-left tap-active ${
-              currentScreen === item.screen ? 'bg-pill-bg' : ''
+              currentScreen === item.screen && currentCategory === 'all' ? 'bg-pill-bg' : ''
             }`}
           >
             <span className="text-xl">{item.icon}</span>
-            <span className={`text-sm ${currentScreen === item.screen ? 'text-accent' : 'text-text'}`}>
+            <span
+              className={`text-sm ${
+                currentScreen === item.screen && currentCategory === 'all' ? 'text-accent' : 'text-text'
+              }`}
+            >
               {item.label}
             </span>
           </button>
@@ -52,21 +64,31 @@ export const Sidebar: FC<Props> = ({ onClose, onNavigate, currentScreen }) => {
         <div className="px-5 py-3 mt-4">
           <div className="text-text-faint text-xs font-bold uppercase tracking-wider">Bootcamps</div>
         </div>
-        {CATS.map((item) => (
-          <div
-            key={item.label}
-            className="w-full flex items-center gap-3 px-5 py-2.5 text-left"
-          >
-            <span className="text-base">{item.icon}</span>
-            <span className="text-text-dim text-sm">{item.label}</span>
-          </div>
-        ))}
+        {CATS.map((item) => {
+          const isActive = currentCategory === item.value && currentScreen === 'home'
+          return (
+            <button
+              key={item.label}
+              onClick={() => onSelectCategory(item.value)}
+              className={`w-full flex items-center gap-3 px-5 py-2.5 text-left tap-active ${
+                isActive ? 'bg-pill-bg' : ''
+              }`}
+            >
+              <span className="text-base">{item.icon}</span>
+              <span className={`text-sm ${isActive ? 'text-accent' : 'text-text'}`}>
+                {item.label}
+              </span>
+            </button>
+          )
+        })}
       </div>
 
       {/* Footer */}
       <div className="p-4 border-t border-divider text-xs text-text-faint">
         <div>v1.0.0 · 100% APPROVED</div>
-        <button onClick={onClose} className="mt-2 text-accent text-sm tap-active">關閉 Close</button>
+        <button onClick={onClose} className="mt-2 text-accent text-sm tap-active">
+          關閉 Close
+        </button>
       </div>
     </div>
   )
