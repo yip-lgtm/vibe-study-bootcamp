@@ -10,6 +10,32 @@ interface Props {
 }
 
 export const CourseDetail: FC<Props> = ({ course, isFollowed, isSaved, onFollow, onSave }) => {
+  const handleSuggestCorrection = () => {
+    const title = encodeURIComponent(`[Correction] ${course.title}`)
+    const body = encodeURIComponent(
+      `## 內容修正建議 / Content Correction\n\n` +
+      `**課程 / Course:** ${course.title}\n` +
+      `**ID:** \`${course.id}\`\n` +
+      `**Path:** \`${course.path}\`\n` +
+      `**GitHub:** ${course.url}\n\n` +
+      `### 問題類型\n` +
+      `- [ ] 事實錯誤 / Factual error\n` +
+      `- [ ] 方程式錯誤 / Equation error\n` +
+      `- [ ] 引用錯誤 / Citation / scholar error\n` +
+      `- [ ] 中英翻譯問題 / Translation issue\n` +
+      `- [ ] 內容過時 / Outdated content\n` +
+      `- [ ] 其他 / Other\n\n` +
+      `### 詳細說明\n` +
+      `（請寫清楚位置、而家寫咗咩、建議改成咩、有冇來源）\n\n` +
+      `---\n` +
+      `*Submitted via AllBootcamp Course Detail · ${new Date().toISOString().slice(0, 10)}*`
+    )
+    window.open(
+      `https://github.com/yip-lgtm/vibe-study-bootcamp/issues/new?title=${title}&body=${body}&labels=correction`,
+      '_blank'
+    )
+  }
+
   return (
     <div className="flex-1 overflow-y-auto pb-16">
       {/* Hero */}
@@ -110,7 +136,7 @@ export const CourseDetail: FC<Props> = ({ course, isFollowed, isSaved, onFollow,
       </section>
 
       {/* Action: open in GitHub */}
-      <div className="px-4 py-4">
+      <div className="px-4 py-4 space-y-3">
         <a
           href={course.url}
           target="_blank"
@@ -119,10 +145,28 @@ export const CourseDetail: FC<Props> = ({ course, isFollowed, isSaved, onFollow,
         >
           喺 GitHub 開啟 Open in GitHub ↗
         </a>
-        <div className="mt-2 text-text-faint text-xs text-center break-all">
+        <div className="text-text-faint text-xs text-center break-all">
           {course.path}
         </div>
       </div>
+
+      {/* 公眾修正 / Public Correction */}
+      <section className="px-4 pb-6">
+        <div className="border border-divider rounded-xl p-4 bg-card">
+          <h2 className="text-accent font-bold mb-1 flex items-center gap-2">
+            ✏️ 公眾修正
+          </h2>
+          <p className="text-text-dim text-xs mb-3 leading-relaxed">
+            發現錯誤、過時內容或翻譯問題？歡迎提出修正，會直接變成 GitHub Issue 俾 multi-agent 處理。
+          </p>
+          <button
+            onClick={handleSuggestCorrection}
+            className="w-full py-2.5 rounded font-bold text-sm bg-accent text-black tap-active"
+          >
+            提出修正 Suggest a Correction →
+          </button>
+        </div>
+      </section>
     </div>
   )
 }

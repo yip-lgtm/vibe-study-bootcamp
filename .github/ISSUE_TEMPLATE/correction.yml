@@ -1,0 +1,47 @@
+name: ✏️ Content Correction
+description: 指出課程內容錯誤或需要修正的地方
+title: "[Correction] "
+labels: ["correction"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        多謝你幫手改善內容質素！請盡量寫清楚要改邊度。
+  - type: input
+    id: course
+    attributes:
+      label: 課程 / Course
+      description: 課程標題或 ID（通常已自動填好）
+      placeholder: e.g. BIOC3605 — Omics
+    validations:
+      required: true
+  - type: dropdown
+    id: type
+    attributes:
+      label: 問題類型
+      options:
+        - 事實錯誤 / Factual error
+        - 方程式錯誤 / Equation error
+        - 引用錯誤 / Citation / scholar error
+        - 中英翻譯問題 / Translation issue
+        - 內容過時 / Outdated content
+        - 其他 / Other
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: 詳細說明
+      description: 而家寫咗咩、應該改成咩、有冇來源？
+      placeholder: |
+        位置：...
+        而家寫：...
+        建議改為：...
+        參考：...
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: 參考來源（optional）
+      placeholder: https://... 或 書名 + 頁碼
