@@ -56,8 +56,19 @@ class ProviderConfig:
 
 
 # MiniMax (Anthropic-compatible API)
-MINIMAX_BASE = "https://api.minimaxi.com/anthropic/v1"
+# IMPORTANT: sk-cp- Subscription Keys (Token Plan) require api.minimax.io
+# NOT api.minimaxi.com (which is for pay-as-you-go only)
+MINIMAX_TOKEN_PLAN_BASE = "https://api.minimax.io/anthropic"
+MINIMAX_PAYG_BASE = "https://api.minimaxi.com/anthropic/v1"
 MINIMAX_MODEL = "MiniMax-M3"  # default model
+
+# Heuristic: sk-cp- keys are Token Plan (use api.minimax.io)
+# Other keys (e.g. sk-...) are pay-as-you-go (use api.minimaxi.com)
+def _minimax_base_for_key(api_key: str) -> str:
+    """Return the right MiniMax base URL based on key prefix."""
+    if api_key and api_key.startswith("sk-cp-"):
+        return MINIMAX_TOKEN_PLAN_BASE
+    return MINIMAX_PAYG_BASE
 
 # Anthropic
 ANTHROPIC_BASE = "https://api.anthropic.com"
@@ -75,10 +86,11 @@ OLLAMA_MODEL = "llama3.1"
 def detect_provider() -> ProviderConfig:
     """Auto-detect provider from environment variables (priority: MiniMax > Anthropic > OpenAI > Ollama)."""
     if os.environ.get("MINIMAX_API_KEY"):
+        key = os.environ.get("MINIMAX_API_KEY")
         return ProviderConfig(
             name="MiniMax",
-            base_url=os.environ.get("MINIMAX_BASE_URL", MINIMAX_BASE),
-            api_key=os.environ.get("MINIMAX_API_KEY"),
+            base_url=os.environ.get("MINIMAX_BASE_URL", _minimax_base_for_key(key)),
+            api_key=key,
             default_model=os.environ.get("MINIMAX_MODEL", MINIMAX_MODEL),
             auth_style="bearer",  # MiniMax uses bearer for Anthropic-compatible API
         )
@@ -109,7 +121,7 @@ def detect_provider() -> ProviderConfig:
     # No provider — return MiniMax with no key (will fail at call time)
     return ProviderConfig(
         name="MiniMax",
-        base_url=MINIMAX_BASE,
+        base_url=MINIMAX_PAYG_BASE,
         api_key=os.environ.get("MINIMAX_API_KEY"),
         default_model=MINIMAX_MODEL,
         auth_style="bearer",
@@ -165,12 +177,18 @@ def complete(
     model = model or cfg.default_model
 
     # Build request
-    # MiniMax exposes Anthropic-compatible API directly (no /v1 suffix)
+    # MiniMax exposes Anthropic-compatible API at /anthropic/v1/messages
+    # (so the base URL ends at /anthropic, we add /v1/messages)
     if cfg.name == "Anthropic":
         url = f"{cfg.base_url.rstrip('/')}/v1/messages"
     elif cfg.name == "MiniMax":
-        # MiniMax base is already /anthropic/v1
-        url = f"{cfg.base_url.rstrip('/')}/messages"
+        # Base URL is /anthropic (Token Plan) or /anthropic/v1 (PAYG)
+        # We always need to add /v1/messages
+        base = cfg.base_url.rstrip('/')
+        if base.endswith('/v1'):
+            url = f"{base}/messages"
+        else:
+            url = f"{base}/v1/messages"
     else:
         url = f"{cfg.base_url.rstrip('/')}/chat/completions"
     headers = {
