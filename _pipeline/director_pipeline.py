@@ -73,7 +73,8 @@ def build_graph() -> StateGraph:
         {
             "engineer": "engineer",
             "professor_supervisor": "professor_supervisor",
-            END: END,
+            "END": END,
+            "__END__": END,
         },
     )
 

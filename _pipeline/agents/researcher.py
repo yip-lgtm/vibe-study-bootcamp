@@ -1,322 +1,166 @@
 """
-Agent Node: Researcher (LangGraph-style)
+Agent Node: Researcher (LLM-based)
 
 Reads: course_path (source markdown)
-Writes: brief = {primary_sources, key_authors, key_numbers, key_dates, ...}
+Writes: brief = {primary_sources, scholars_with_years, key_numbers, key_dates, ...}
 
-This is a node in the StateGraph. It takes the current state + config
-and returns a dict of updates (applied via reducers by the graph runtime).
-
-Reference: OpenMAIC's `lib/orchestration/registry/types.ts` -- AgentConfig pattern
-inspired the structured brief output.
+Strategy: Use LLM to produce a structured brief from the source markdown.
+If no API key is available, fall back to deterministic regex-based extraction.
 """
 from __future__ import annotations
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 import re
+import os
 
-from ..state import PipelineState, emit_event, snapshot
+from ..state import PipelineState
+from ..llm_client import complete, detect_provider, LLMResponse
 
 
-# Scholar regex: common CEE/STEM scholars with years.
-# Use ASCII-only names to avoid encoding issues.
+SYSTEM_PROMPT_RESEARCHER = """You are the **Researcher** agent in a multi-agent course-generation pipeline.
+
+Your job: read a course markdown file and produce a structured **brief** of verified primary sources, real scholars (with years), and key numbers.
+
+Strict rules:
+- ONLY cite scholars with verifiable publication years (e.g., "Newton 1687", "Stokes 1851", "Bourouiba 2021")
+- ONLY cite real primary sources (MIT OCW, arXiv, university catalogs, peer-reviewed journals, ISBNs)
+- Do NOT fabricate DOIs, ISBNs, or arXiv IDs
+- If a claim is uncertain, omit it rather than guess
+
+Output format (return ONLY this JSON, no commentary):
+```json
+{
+  "primary_sources": [
+    {"title": "...", "url_or_isbn": "...", "type": "OCW|arXiv|journal|textbook|catalog"}
+  ],
+  "scholars_with_years": ["Newton 1687", "Stokes 1851", "Bourouiba 2021"],
+  "key_numbers": ["3×10^8 m/s", "6.022×10^23 /mol", "9.81 m/s²"],
+  "key_dates": [1687, 1851, 1905, 1926, 2021]
+}
+```
+
+Limit output to ~20 primary sources, ~30 scholars, ~30 numbers."""
+
+
+def _llm_researcher(state: PipelineState, content: str, config: Dict[str, Any]) -> Dict[str, Any]:
+    """LLM-based researcher: ask LLM to produce structured brief."""
+    writer = config.get("writer")
+    if writer:
+        writer({"type": "llm_call", "agent": "researcher", "phase": "start"})
+
+    # Truncate content to fit context window (keep first 30K chars)
+    content_for_llm = content[:30000] if len(content) > 30000 else content
+
+    user_msg = (
+        f"Course path: {state.course_path}\n"
+        f"Course code: {state.course_code}\n\n"
+        f"--- Source content ({len(content):,} chars, "
+        f"{content.count(chr(10)):,} lines) ---\n\n"
+        f"{content_for_llm}\n\n"
+        f"--- End of source ---\n\n"
+        f"Produce the structured brief JSON."
+    )
+
+    cfg = detect_provider()
+    resp = complete(
+        messages=[{"role": "user", "content": user_msg}],
+        system=SYSTEM_PROMPT_RESEARCHER,
+        max_tokens=4096,
+        temperature=0.2,  # low for factual extraction
+    )
+
+    if writer:
+        writer({
+            "type": "llm_call", "agent": "researcher", "phase": "end",
+            "tokens": resp.input_tokens + resp.output_tokens,
+            "latency_ms": resp.latency_ms,
+            "model": resp.model,
+        })
+
+    # Parse JSON response
+    import json
+    text = resp.text.strip()
+    # Strip ```json ... ``` fences if present
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?\s*", "", text)
+        text = re.sub(r"```\s*$", "", text)
+
+    try:
+        brief = json.loads(text)
+    except json.JSONDecodeError:
+        # Try to find JSON in the response
+        m = re.search(r"\{.*\}", text, re.DOTALL)
+        if m:
+            try:
+                brief = json.loads(m.group(0))
+            except json.JSONDecodeError:
+                brief = {
+                    "primary_sources": [],
+                    "scholars_with_years": [],
+                    "key_numbers": [],
+                    "key_dates": [],
+                    "_raw_response": text[:1000],
+                    "_error": "Failed to parse JSON",
+                }
+        else:
+            brief = {
+                "primary_sources": [],
+                "scholars_with_years": [],
+                "key_numbers": [],
+                "key_dates": [],
+                "_raw_response": text[:1000],
+                "_error": "No JSON found",
+            }
+
+    # Normalize
+    brief["source_chars"] = len(content)
+    brief["source_lines"] = content.count("\n")
+    brief["model_used"] = resp.model
+    brief["llm_tokens"] = resp.input_tokens + resp.output_tokens
+    brief["llm_latency_ms"] = resp.latency_ms
+
+    return brief
+
+
+# ===== Deterministic fallback (regex-based) =====
+
 SCHOLAR_NAMES = (
     r"Newton|Einstein|Maxwell|Bohr|Dirac|Feynman|Heisenberg|"
-    r"Boltzmann|Fermi|Bose|Hawking|Penrose|Stokes|Reynolds|vonKarman|"
-    r"Hemond|Schwarzenbach|Stumm|Morgan|"
-    r"Griffiths|Sakurai|Ashcroft|Mermin|Kittel|"
-    r"Hestenes|Stiefel|Householder|Golub|Wilkinson|"
-    r"Timoshenko|Crandall|Gere|Boresi|"
-    r"Casagrande|Terzaghi|Darcy|Bernoulli|Coulomb|Mohr|"
-    r"Mandelbrot|Faraday|Ohm|Kirchhoff|Joule|Watt|Hertz|"
-    r"Plato|Aristotle|Euclid|Archimedes|Pythagoras|"
-    r"Pauling|Henderson|Hasselbalch|Arrhenius|"
-    r"Watson|Crick|Darwin|Mendel|"
-    r"Strang|Knuth|Cormen|Dijkstra|Hoare|"
-    r"Bourouiba|Wells|"
-    r"Hubbard|Marsden|Apostol|Spivak|"
+    r"Boltzmann|Fermi|Bose|Hawking|Penrose|Stokes|Reynolds|"
+    r"Timoshenko|Terzaghi|Bernoulli|Coulomb|"
+    r"Strang|Knuth|Bourouiba|"
     r"Fourier|Lagrange|Hamilton|"
-    r"Landau|Lifshitz|"
-    r"Schiff|"
-    r"Shankar|"
-    r"Napolitano|"
-    r"Zee|"
-    r"Schwartz|"
-    r"Bogoliubov|Shirkov|"
-    r"Cheng|Li|"
-    r"Jackson|"
-    r"Zangwill|"
-    r"Morse|Feshbach|"
-    r"Arfken|Weber|Harris|"
-    r"Gottfried|Yan|"
-    r"Merzbacher|"
-    r"Ryder|Itzykson|Zuber|"
-    r"Peskin|Schroeder|"
-    r"Eddington|Penrose|Wald|"
-    r"Brillouin|Kramers|Kronig|"
-    r"Polchinski|Witten|"
-    r"Greiner|Muller|"
-    r"Hardy|Weinberg|"
+    r"Watson|Crick|Darwin|Mendel|"
+    r"Landau|Lifshitz|Hemond|Schwarzenbach|"
+    r"Griffiths|Sakurai|Morse|Feshbach|"
+    r"Arfken|Weber|Harris|Marsden|Apostol|Spivak|"
+    r"Pauling|Henderson|Hasselbalch|Arrhenius|"
+    r"Hubbard|"
+    r"Schiff|Shankar|Napolitano|Zee|Schwartz|"
+    r"Bogoliubov|Shirkov|Cheng|Li|Jackson|Zangwill|"
+    r"Brillouin|Kramers|Kronig|Polchinski|Witten|"
+    r"Eddington|Wald|"
     r"Shannon|Hamming|Turing|vonNeumann|"
     r"Gauss|Riemann|Lebesgue|Stieltjes|"
-    r"Cantor|Dedekind|Weierstrass|"
-    r"Abel|Galois|Burnside|"
-    r"Knuth|Steinhaus|Erdos|"
-    r"Sagan|Christensen|"
-    r"MITOCW|"
-    r"Smith|Joule|"
-    r"Hubbard|"
-    r"Merzbacher|"
-    r"Brahe|Kepler|Galileo|Copernicus|"
     r"Curie|Rontgen|Becquerel|Rutherford|"
+    r"Hardy|Weinberg|"
+    r"Mandelbrot|Faraday|Ohm|Kirchhoff|Joule|Watt|Hertz|"
+    r"Plato|Aristotle|Euclid|Archimedes|Pythagoras|"
+    r"Brahe|Kepler|Galileo|Copernicus|"
     r"Heaviside|Gibbs|"
-    r"Hamilton|"
-    r"Taylor|Whittaker|"
-    r"Hong|Kong|"
+    r"Cantor|Dedekind|Weierstrass|Abel|Galois|"
+    r"Cormen|Dijkstra|Hoare|"
+    r"Hestenes|Stiefel|Householder|Golub|Wilkinson|"
+    r"Smagorinsky|Lilly|Deardorff|"
     r"HongKong|"
-    r"HKU|MIT|UCLA|CUHK|UST|HKUST|"
-    r"Deisenroth|Faisal|"
-    r"Stroud|Boas|"
-    r"Boyd|Vandenberghe|"
-    r"Conway|"
-    r"Shannon|"
-    r"Gibbs|Boltzmann|"
-    r"Keenan|"
-    r"Levenspiel|"
-    r"Singh|Holman|"
-    r"Geankoplis|"
-    "Peters|Timmermann|"
-    r"Whitaker|Barron|"
-    r"Zemansky|Dittman|"
-    r"Reid|Sherwood|"
-    r"Felder|Denny|"
-    r"Perry|Green|"
-    r"Cengel|Boles|"
-    r"Kaviany|"
-    r"Bejan|"
-    r"Kays|Crawford|"
-    r"Incropera|DeWitt|"
-    r"Modest|"
-    r"Holman|"
-    r"Bergman|Lavine|"
-    r"Schmidt|"
-    r"Carey|"
-    r"Touloukian|"
-    r"Bird|Stewart|Lightfoot|"
-    r"Deen|"
-    r"Bruus|"
-    r"Patankar|"
-    r"Ferziger|Peric|"
-    r"Pope|"
-    r"Wilcox|"
-    r"Davidson|"
-    r"Monin|Yaglom|"
-    r"Tennekes|Lumley|"
-    r"Pope|"
-    r"Davidson|"
-    r"Yeung|"
-    r"Kundu|Cohen|Dowling|"
-    r"White|"
-    r"Blevins|"
-    r"Naik|Patel|"
-    r"Vanka|"
-    r"Shen|"
-    r"Hussain|"
-    r"Choudhuri|"
-    r"Boyd|Sanderson|"
-    r"Lee|Woods|"
-    r"Higdon|"
-    r"Sagani|Lee|"
-    r"Socolofsky|Jorgensen|"
-    r"Davis|Cornwell|"
-    r"Choi|Lam|"
-    r"Ferziger|"
-    r"Patel|"
-    r"Rey|Liou|"
-    r"Zeman|"
-    r"Sandberg|"
-    r"Carver|"
-    r"Boyd|"
-    r"McCarty|"
-    r"Park|Livingston|"
-    r"Schetz|Bowden|"
-    r"Mattingly|"
-    r"Spalding|"
-    r"Crowe|Elger|"
-    r"Munson|"
-    r"Potter|Wiggert|"
-    r"Zikanov|"
-    r"Kundu|"
-    r"White|"
-    r"Kundu|"
-    r"Pozrikidis|"
-    r"Trinh|"
-    r"Batchelor|"
-    r"Monin|"
-    r"Tritton|"
-    r"Landau|Lifshitz|"
-    r"White|"
-    r"Fox|McDonald|"
-    r"McComb|"
-    r"Lesieur|"
-    r"Davidson|"
-    r"Fernando|"
-    r"Cushman-Roisin|Becker|"
-    r"Pedlosky|"
-    r"Vallis|"
-    r"Holton|"
-    r"Salby|"
-    r"Salmon|"
-    r"Cushman-Roisin|"
-    r"Pedlosky|"
-    r"Holton|"
-    r"Wallace|Hobbs|"
-    r"Coiffier|"
-    r"Holton|"
-    r"Lin|"
-    r"Kundu|"
-    r"Curry|"
-    r"Webster|"
-    r"Saltzman|"
-    r"Stensrud|"
-    r"Cotton|"
-    r"Bluestein|"
-    r"Markowski|"
-    r"Raymond|"
-    r"Houze|"
-    r"Doswell|"
-    r"Markowski|"
-    r"Schultz|"
-    r"Schultz|"
-    r"Bohren|Baten|"
-    r"Young|"
-    r"Liou|"
-    r"Salby|"
-    r"Holton|"
-    r"Danielson|"
-    r"Hartmann|"
-    r"Curry|"
-    r"Webster|"
-    r"Peixoto|"
-    r"Oort|"
-    r"Lorenz|"
-    r"Charney|"
-    r"Eady|"
-    r"Smagorinsky|"
-    r"Lorenz|"
-    r"Palmer|"
-    r"Platzman|"
-    r"Wiin-Nielsen|"
-    r"Smagorinsky|"
-    r"Lilly|"
-    r"Deardorff|"
-    r"Wyngaard|"
-    r"Moeng|"
-    r"Sullivan|"
-    r"McComb|"
-    r"Monin|Yaglom|"
-    r"Frisch|"
-    r"Kraichnan|"
-    r"Batchelor|"
-    r"Townsend|"
-    r"Monin|"
-    r"Tennekes|Lumley|"
-    r"Hinze|"
-    r"McComb|"
-    r"Libby|"
-    r"Williams|"
-    r"Pope|"
-    r"Davidson|"
-    r"Yeung|"
-    r"Sreenivasan|"
-    r"Antonia|"
-    r"Dimotakis|"
-    r"Bell|"
-    r"Kennedy|"
-    r"Chhabra|"
-    r"Schmitt|"
-    r"Huchet|"
-    r"Tropea|"
-    r"Yarin|"
-    r"Foss|"
-    r"Tropea|"
-    r"Summer|"
-    r"Foss|"
-    r"Michaelides|"
-    r"Patel|"
-    r"Sommerfeld|"
-    r"Prandtl|"
-    r"Schlichting|"
-    r"White|"
-    r"Kays|Crawford|"
-    r"Bejan|"
-    r"Incropera|"
-    r"Modest|"
-    r"Bergman|"
-    r"Kays|"
-    r"Tao|"
-    r"Fox|"
-    r"McDonald|"
-    r"White|"
-    r"Tao|"
-    r"Batchelor|"
-    r"Landau|Lifshitz|"
-    r"Happel|Brenner|"
-    r"Clift|Grace|Weber|"
-    r"Michaelides|"
-    r"Fan|Zhu|"
-    r"Kuan|"
-    r"Walker|"
-    r"Socolofsky|Jorgensen|"
-    r"Libby|"
-    r"Williams|"
-    r"Zeman|"
-    r"Karagozian|"
-    r"Choudhuri|"
-    r"Yu|Zhou|"
-    r"Zhou|"
-    r"Zhou|"
-    r"Hill|"
-    r"Yih-Hong|"
-    r"Chan|"
-    r"Lam|"
-    r"Lam|"
-    r"Li|"
-    r"Zhang|"
-    r"Wang|"
-    r"Chen|"
-    r"Liu|"
-    r"Yang|"
-    r"Huang|"
-    r"Zhu|"
-    r"Yu|"
-    r"Xu|"
-    r"Lin|"
-    r"Ye|"
-    r"HongKong|"
-    r"Hong|Kong"
+    r"HKU|MIT|UCLA|CUHK|UST|HKUST"
 )
 SCHOLAR_PATTERN = re.compile(r"\b(?:" + SCHOLAR_NAMES + r")\s*[\(]?(\d{4})[\)]?")
 
 
-def researcher_node(state: PipelineState, config: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Researcher node: scans source markdown for primary sources,
-    real scholars with years, and key numbers.
-    """
-    writer = config.get("writer")
-    if writer:
-        writer({"type": "agent_start", "agent": "researcher", "course": state.course_code})
-
-    # Read source file
-    try:
-        with open(state.course_path, "r", encoding="utf-8") as f:
-            content = f.read()
-    except Exception as e:
-        return {"errors": [f"[researcher] Cannot read {state.course_path}: {e}"]}
-
-    # Extract primary sources: lines starting with > (blockquotes) or
-    # lines containing MIT OCW / arXiv / DOI / ISBN / Primary Source
-    primary_sources: List[str] = []
+def _deterministic_researcher(state: PipelineState, content: str) -> Dict[str, Any]:
+    """Deterministic fallback: regex-based extraction."""
+    # Primary sources
+    primary_sources = []
     for line in content.split("\n"):
         line = line.strip()
         if line.startswith(">") and (
@@ -325,10 +169,10 @@ def researcher_node(state: PipelineState, config: Dict[str, Any]) -> Dict[str, A
         ):
             primary_sources.append(line.lstrip("> ").strip())
 
-    # Extract scholars with years
+    # Scholars
     scholars_with_years = list(set(SCHOLAR_PATTERN.findall(content)))
 
-    # Extract numbers with units (very rough)
+    # Numbers with units
     numbers = re.findall(
         r"\b\d+\.?\d*\s*(?:m|kg|s|K|Hz|kHz|MHz|GHz|"
         r"m/s|m/s\^2|N|J|W|eV|MeV|GeV|Pa|kPa|MPa|GPa|"
@@ -336,26 +180,65 @@ def researcher_node(state: PipelineState, config: Dict[str, Any]) -> Dict[str, A
         content,
     )
 
-    # Extract key dates
     years = sorted(set(int(y) for y in scholars_with_years if y.isdigit()))
 
-    brief = {
+    return {
         "primary_sources": primary_sources[:20],
         "scholars_with_years": [f"{y}" for y in scholars_with_years[:30]],
         "key_numbers": numbers[:30],
-        "key_years": years,
+        "key_dates": years,
         "source_chars": len(content),
         "source_lines": content.count("\n"),
+        "_method": "deterministic",
     }
+
+
+# ===== Main node function =====
+
+def researcher_node(state: PipelineState, config: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Researcher node: produces a structured brief.
+    - LLM-based if API key is set
+    - Deterministic regex-based fallback otherwise
+    """
+    writer = config.get("writer")
+    if writer:
+        writer({"type": "agent_start", "agent": "researcher", "course": state.course_code})
+
+    try:
+        with open(state.course_path, "r", encoding="utf-8") as f:
+            content = f.read()
+    except Exception as e:
+        return {"errors": [f"[researcher] Cannot read {state.course_path}: {e}"]}
+
+    cfg = detect_provider()
+    use_llm = bool(cfg.api_key) and not config.get("force_deterministic", False)
+
+    if use_llm:
+        try:
+            brief = _llm_researcher(state, content, config)
+            method = "llm"
+        except Exception as e:
+            if writer:
+                writer({"type": "llm_error", "agent": "researcher", "error": str(e)[:200]})
+            brief = _deterministic_researcher(state, content)
+            method = "deterministic_fallback"
+    else:
+        brief = _deterministic_researcher(state, content)
+        method = "deterministic"
 
     if writer:
         writer({
             "type": "agent_end", "agent": "researcher",
+            "method": method,
             "result": (
-                f"{len(brief['primary_sources'])} sources, "
-                f"{len(brief['scholars_with_years'])} scholar-years, "
-                f"{len(brief['key_numbers'])} numbers"
+                f"{len(brief.get('primary_sources', []))} sources, "
+                f"{len(brief.get('scholars_with_years', []))} scholars, "
+                f"{len(brief.get('key_numbers', []))} numbers"
             ),
         })
 
-    return {"brief": brief}
+    return {"brief": brief, "events": [{
+        "type": "researcher_method",
+        "data": {"method": method, "course": state.course_code},
+    }]}
