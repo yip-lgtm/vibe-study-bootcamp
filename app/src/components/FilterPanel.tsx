@@ -13,8 +13,8 @@ interface Props {
   setHasEquations: (b: boolean) => void
   minLines: number
   setMinLines: (n: number) => void
-  sortBy: 'newest' | 'lines' | 'title' | 'category'
-  setSortBy: (s: 'newest' | 'lines' | 'title' | 'category') => void
+  sortBy: 'newest' | 'lines' | 'title' | 'category' | 'mixed'
+  setSortBy: (s: 'newest' | 'lines' | 'title' | 'category' | 'mixed') => void
   counts: Record<string, number>
 }
 
@@ -45,7 +45,7 @@ export const FilterPanel: FC<Props> = ({
     hasScholars ||
     hasEquations ||
     minLines > 0 ||
-    sortBy !== 'category'
+    sortBy !== 'mixed'
 
   const clearAll = () => {
     setCategory('all')
@@ -53,7 +53,7 @@ export const FilterPanel: FC<Props> = ({
     setHasScholars(false)
     setHasEquations(false)
     setMinLines(0)
-    setSortBy('category')
+    setSortBy('mixed')
   }
 
   return (
@@ -167,6 +167,7 @@ export const FilterPanel: FC<Props> = ({
           <div className="text-text-faint text-xs font-bold mb-2 uppercase">排序 Sort</div>
           <div className="grid grid-cols-2 gap-2">
             {[
+              { v: 'mixed', l: '混合' },
               { v: 'category', l: '類別' },
               { v: 'lines', l: '行數' },
               { v: 'title', l: '標題' },
