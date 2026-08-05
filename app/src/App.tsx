@@ -7,6 +7,8 @@ import { TopBar } from './components/TopBar'
 import { BottomNav } from './components/BottomNav'
 import coursesData from './data/courses.json'
 import { loadFollow, loadSaved, toggleFollow, toggleSaved, type Course } from './utils/storage'
+import { seededShuffle, getDailySeed, getWeeklySeed } from './utils/shuffle'
+import type { ListMode } from './components/CourseList'
 
 type Screen = 'home' | 'detail' | 'following' | 'saved' | 'search'
 type SidePanel = 'left' | 'right' | null
@@ -30,6 +32,7 @@ export default function App() {
   const [filterHasEquations, setFilterHasEquations] = useState(false)
   const [filterMinLines, setFilterMinLines] = useState(0)
   const [sortBy, setSortBy] = useState<'newest' | 'lines' | 'title' | 'category' | 'mixed'>('mixed')
+  const [listMode, setListMode] = useState<ListMode>('mixed')
 
   // Following / Saved
   const [followed, setFollowed] = useState<Set<string>>(new Set())
@@ -84,52 +87,88 @@ export default function App() {
       result = result.filter(c => c.lines >= filterMinLines)
     }
 
-    // Sort — always stable
+    // Ranking / sort
     result = [...result]
-    if (sortBy === 'lines') {
-      result.sort((a, b) => b.lines - a.lines || a.id.localeCompare(b.id))
-    } else if (sortBy === 'title') {
-      result.sort((a, b) => a.title.localeCompare(b.title) || a.id.localeCompare(b.id))
-    } else if (sortBy === 'newest') {
-      result.sort((a, b) => b.id.localeCompare(a.id))
-    } else if (sortBy === 'category') {
-      result.sort(
-        (a, b) =>
-          a.category.localeCompare(b.category) ||
-          a.title.localeCompare(b.title) ||
-          a.id.localeCompare(b.id)
-      )
-    } else {
-      // default: interleave categories (混合穿插) — stable round-robin
-      const byCat: Record<string, Course[]> = {}
-      for (const c of result) {
-        const k = c.category || 'Other'
-        if (!byCat[k]) byCat[k] = []
-        byCat[k].push(c)
-      }
-      // stable order inside each category
-      for (const k of Object.keys(byCat)) {
-        byCat[k].sort((a, b) => a.title.localeCompare(b.title) || a.id.localeCompare(b.id))
-      }
-      const catKeys = Object.keys(byCat).sort()
-      const interleaved: Course[] = []
-      let i = 0
-      let added = true
-      while (added) {
-        added = false
-        for (const k of catKeys) {
-          if (i < byCat[k].length) {
-            interleaved.push(byCat[k][i])
-            added = true
-          }
+
+    // On home screen, ranking tabs control order
+    if (screen === 'home' && filterCategory === 'all' && !searchQuery) {
+      if (listMode === 'daily') {
+        result = seededShuffle(result, getDailySeed())
+      } else if (listMode === 'weekly') {
+        result = seededShuffle(result, getWeeklySeed())
+      } else {
+        // mixed: interleave categories
+        const byCat: Record<string, Course[]> = {}
+        for (const c of result) {
+          const k = c.category || 'Other'
+          if (!byCat[k]) byCat[k] = []
+          byCat[k].push(c)
         }
-        i++
+        for (const k of Object.keys(byCat)) {
+          byCat[k].sort((a, b) => a.title.localeCompare(b.title) || a.id.localeCompare(b.id))
+        }
+        const catKeys = Object.keys(byCat).sort()
+        const interleaved: Course[] = []
+        let i = 0
+        let added = true
+        while (added) {
+          added = false
+          for (const k of catKeys) {
+            if (i < byCat[k].length) {
+              interleaved.push(byCat[k][i])
+              added = true
+            }
+          }
+          i++
+        }
+        result = interleaved
       }
-      result = interleaved
+    } else {
+      // Filter panel sort (when filtered / other screens)
+      if (sortBy === 'lines') {
+        result.sort((a, b) => b.lines - a.lines || a.id.localeCompare(b.id))
+      } else if (sortBy === 'title') {
+        result.sort((a, b) => a.title.localeCompare(b.title) || a.id.localeCompare(b.id))
+      } else if (sortBy === 'newest') {
+        result.sort((a, b) => b.id.localeCompare(a.id))
+      } else if (sortBy === 'category') {
+        result.sort(
+          (a, b) =>
+            a.category.localeCompare(b.category) ||
+            a.title.localeCompare(b.title) ||
+            a.id.localeCompare(b.id)
+        )
+      } else {
+        // mixed interleave
+        const byCat: Record<string, Course[]> = {}
+        for (const c of result) {
+          const k = c.category || 'Other'
+          if (!byCat[k]) byCat[k] = []
+          byCat[k].push(c)
+        }
+        for (const k of Object.keys(byCat)) {
+          byCat[k].sort((a, b) => a.title.localeCompare(b.title) || a.id.localeCompare(b.id))
+        }
+        const catKeys = Object.keys(byCat).sort()
+        const interleaved: Course[] = []
+        let i = 0
+        let added = true
+        while (added) {
+          added = false
+          for (const k of catKeys) {
+            if (i < byCat[k].length) {
+              interleaved.push(byCat[k][i])
+              added = true
+            }
+          }
+          i++
+        }
+        result = interleaved
+      }
     }
 
     return result
-  }, [courses, screen, searchQuery, filterCategory, filterSubcategory, filterHasScholars, filterHasEquations, filterMinLines, sortBy, followed, saved])
+  }, [courses, screen, searchQuery, filterCategory, filterSubcategory, filterHasScholars, filterHasEquations, filterMinLines, sortBy, listMode, followed, saved])
 
   // Compute available subcategories for current category
   const subcategoryCounts = useMemo(() => {
@@ -168,7 +207,6 @@ export default function App() {
     const title = addTitle.trim()
     if (!title) return
 
-    // Save to localStorage as request history
     try {
       const key = 'study_tour_requests'
       const prev = JSON.parse(localStorage.getItem(key) || '[]')
@@ -180,7 +218,6 @@ export default function App() {
       localStorage.setItem(key, JSON.stringify(prev.slice(0, 20)))
     } catch {}
 
-    // Open pre-filled GitHub Issue
     const issueTitle = encodeURIComponent(`[Course Request] ${title}`)
     const body = encodeURIComponent(
       `## 課程申請 / Course Request\n\n` +
@@ -202,10 +239,8 @@ export default function App() {
 
   return (
     <div className="h-full bg-black text-white overflow-hidden relative">
-      {/* Status bar spacer for iOS PWA */}
       <div className="h-[env(safe-area-inset-top)]" />
 
-      {/* Main content area */}
       <div className="h-full flex flex-col">
         <TopBar
           screen={screen}
@@ -234,6 +269,8 @@ export default function App() {
             onSave={handleSave}
             totalCount={courses.length}
             screen={screen}
+            listMode={listMode}
+            onListModeChange={setListMode}
           />
         )}
 
@@ -249,7 +286,6 @@ export default function App() {
         />
       </div>
 
-      {/* Side panels */}
       {sidePanel === 'left' && (
         <>
           <div
@@ -306,7 +342,6 @@ export default function App() {
         </>
       )}
 
-      {/* Quick Add / Request Course Modal */}
       {showAddModal && (
         <>
           <div
