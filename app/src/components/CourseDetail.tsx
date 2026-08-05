@@ -1,5 +1,6 @@
 import type { FC } from 'react'
 import type { Course } from '../utils/storage'
+import { GiscusComments } from './GiscusComments'
 
 interface Props {
   course: Course
@@ -151,7 +152,7 @@ export const CourseDetail: FC<Props> = ({ course, isFollowed, isSaved, onFollow,
       </div>
 
       {/* 公眾修正 / Public Correction */}
-      <section className="px-4 pb-6">
+      <section className="px-4 pb-4">
         <div className="border border-divider rounded-xl p-4 bg-card">
           <h2 className="text-accent font-bold mb-1 flex items-center gap-2">
             ✏️ 公眾修正
@@ -167,6 +168,9 @@ export const CourseDetail: FC<Props> = ({ course, isFollowed, isSaved, onFollow,
           </button>
         </div>
       </section>
+
+      {/* Giscus Discussion */}
+      <GiscusComments term={course.id} title="討論 / Discussion" />
     </div>
   )
 }
