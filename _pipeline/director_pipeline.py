@@ -147,12 +147,27 @@ def main():
     if args.course:
         print(f"Pipeline (Director pattern): {args.course}")
         print("=" * 60)
+        # Reset token usage tracker for this run
+        from _pipeline.llm_client import reset_usage_tracking, get_usage_report
+        reset_usage_tracking()
         final = run_course(args.course, stream=args.stream,
                            max_iterations=args.max_iterations)
         print()
         print(f"Final decision: {final.decision}")
         print(f"Final score: {final.final_score}")
         print(f"Iterations: {final.iteration}")
+        # Print token usage
+        usage = get_usage_report()
+        print(f"\nToken usage:")
+        print(f"  LLM calls: {usage['calls']}")
+        print(f"  Input tokens:  {usage['input_tokens']:>10,}")
+        print(f"  Output tokens: {usage['output_tokens']:>10,}")
+        print(f"  Total tokens:  {usage['total_tokens']:>10,}")
+        if usage['by_model']:
+            print(f"  By model:")
+            for model, stats in usage['by_model'].items():
+                print(f"    - {model}: {stats['calls']} calls, "
+                      f"{stats['input_tokens']:,} in + {stats['output_tokens']:,} out")
         if args.json:
             from _pipeline.state import snapshot
             print(json.dumps(snapshot(final), ensure_ascii=False, indent=2))

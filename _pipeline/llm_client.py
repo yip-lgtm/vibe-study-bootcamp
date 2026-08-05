@@ -42,6 +42,37 @@ log = logging.getLogger(__name__)
 # Module-level cache for auth failures (avoid hammering API with bad key)
 _last_auth_error: Optional[str] = None
 
+# Module-level tracking of all LLM calls (for token usage reporting)
+_all_responses: List["LLMResponse"] = []
+
+
+def get_usage_report() -> Dict[str, Any]:
+    """Get summary of all LLM calls made in this session."""
+    total_in = sum(r.input_tokens for r in _all_responses)
+    total_out = sum(r.output_tokens for r in _all_responses)
+    total_latency = sum(r.latency_ms for r in _all_responses)
+    return {
+        "calls": len(_all_responses),
+        "input_tokens": total_in,
+        "output_tokens": total_out,
+        "total_tokens": total_in + total_out,
+        "latency_ms": total_latency,
+        "by_model": {
+            model: {
+                "calls": sum(1 for r in _all_responses if r.model == model),
+                "input_tokens": sum(r.input_tokens for r in _all_responses if r.model == model),
+                "output_tokens": sum(r.output_tokens for r in _all_responses if r.model == model),
+            }
+            for model in set(r.model for r in _all_responses)
+        }
+    }
+
+
+def reset_usage_tracking() -> None:
+    """Reset the global LLM call tracker."""
+    global _all_responses
+    _all_responses = []
+
 
 # ===== Provider configuration =====
 
@@ -256,7 +287,7 @@ def complete(
             if block.get("type") == "text":
                 text += block.get("text", "")
         usage = data.get("usage", {})
-        return LLMResponse(
+        resp = LLMResponse(
             text=text,
             model=data.get("model", model),
             input_tokens=usage.get("input_tokens", 0),
@@ -265,10 +296,12 @@ def complete(
             raw=data,
             latency_ms=latency_ms,
         )
+        _all_responses.append(resp)
+        return resp
     else:  # OpenAI format
         text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
         usage = data.get("usage", {})
-        return LLMResponse(
+        resp = LLMResponse(
             text=text,
             model=data.get("model", model),
             input_tokens=usage.get("prompt_tokens", 0),
@@ -277,6 +310,8 @@ def complete(
             raw=data,
             latency_ms=latency_ms,
         )
+        _all_responses.append(resp)
+        return resp
 
 
 # ===== Convenience: print usage summary =====
