@@ -1,0 +1,235 @@
+{
+  "course_id": "civil-bootcamp/MIT_CEE_Core/Track_2_Mechanics_Materials/Materials/01_1.035_Multiscale_Characterization.md",
+  "title": {
+    "en": "1.035 Multiscale Characterization of Materials",
+    "zh": "1.035 材料多尺度表徵"
+  },
+  "audience": "Bachelor → MEng self-learners (prereq: Engineering Mechanics)",
+  "source": "https://github.com/yip-lgtm/civil-bootcamp/blob/main/MIT_CEE_Core/Track_2_Mechanics_Materials/Materials/01_1.035_Multiscale_Characterization.md",
+  "language": "zh-TW+en",
+  "scenes": [
+    {
+      "id": "scene_1",
+      "type": "slide",
+      "order": 1,
+      "title": { "en": "Course map & learning path", "zh": "課程定位與自學路徑" },
+      "keyPoints": ["MIT CEE Mechanics & Materials core · 12 units", "Prereq: 1.050 Engineering Mechanics I", "Path: Bachelor → MEng SMD → Materials / NDT / PhD"],
+      "body_zh": "本課係 MIT CEE Mechanics & Materials track 核心課。目標建立多尺度直覺：宏觀強度、韌性、疲勞來自微觀結構同缺陷演化。",
+      "body_en": "Core MIT CEE course. Goal is multiscale intuition: strength, toughness, and fatigue emerge from microstructure and damage evolution."
+    },
+    {
+      "id": "scene_2",
+      "type": "slide",
+      "order": 2,
+      "title": { "en": "Mental model 1 — Multiscale principle", "zh": "心智模型 1 — 多尺度原理" },
+      "keyPoints": ["Atomic → crystal → grain → phase → specimen", "Same chemistry, different grain size → 10× strength", "Hall-Petch links d to σ_y"],
+      "body_zh": "同一種鐵，粗晶 d≈1 mm 約 200 MPa，奈米晶 d≈10 nm 可到 ~2000 MPa——主因 Hall-Petch。",
+      "body_en": "Polycrystalline iron can span ~200 MPa (coarse) to ~2000 MPa (nanocrystalline) — largely Hall-Petch.",
+      "equation": "\\sigma_y = \\sigma_0 + k_{HP} d^{-1/2}"
+    },
+    {
+      "id": "scene_3",
+      "type": "slide",
+      "order": 3,
+      "title": { "en": "Mental model 2 — Microstructure is engineered", "zh": "心智模型 2 — 顯微組織可被工程化" },
+      "keyPoints": ["Grain size, phases, defects, interfaces", "Case: Northridge 1994 brittle fractures"],
+      "body_zh": "1994 Northridge：A36 高磷、MnS 夾雜大 → 解理；改用更乾淨韌性鋼種（如 A572 Gr.50）。",
+      "body_en": "Northridge 1994: high P and MnS inclusions promoted cleavage; tougher cleaner grades followed."
+    },
+    {
+      "id": "scene_4",
+      "type": "slide",
+      "order": 4,
+      "title": { "en": "Mental model 3 — Damage evolves", "zh": "心智模型 3 — 損傷係演化過程" },
+      "keyPoints": ["Paris law for fatigue", "Case: Aloha Flight 243"],
+      "body_zh": "Aloha 243：鉚釘孔起裂，鋁蒙皮疲勞裂紋擴展超過兩萬循環後臨界失穩。",
+      "body_en": "Aloha 243: fatigue from a rivet hole grew over 20,000+ cycles until critical failure.",
+      "equation": "\\frac{da}{dN} = C(\\Delta K)^{m}"
+    },
+    {
+      "id": "scene_5",
+      "type": "slide",
+      "order": 5,
+      "title": { "en": "Mental models 4–5 — Size effects & characterization", "zh": "心智模型 4–5 — 尺度效應與表徵" },
+      "keyPoints": ["Nanoscale size effects", "Multi-technique characterization", "Case: Boeing 787 CFRP"],
+      "body_zh": "奈米晶銅 ~900 MPa vs 粗晶 ~50 MPa。787 CFRP：無穿透厚度晶界，密度低於鋁。",
+      "body_en": "Nanocrystalline Cu ~900 MPa vs ~50 MPa coarse. 787 CFRP avoids through-thickness grain boundaries."
+    },
+    {
+      "id": "scene_6",
+      "type": "slide",
+      "order": 6,
+      "title": { "en": "Hall-Petch derivation & inverse regime", "zh": "Hall-Petch 推導與反效應" },
+      "keyPoints": ["Pile-up → σ_y ∝ d^{−1/2}", "Inverse Hall-Petch below ~10–15 nm"],
+      "body_zh": "典型鋼 σ_0≈50–100 MPa，k_HP≈0.5–1.0。d 細過約 10–15 nm 可能反 Hall-Petch。",
+      "body_en": "Below ~10–15 nm, inverse Hall-Petch can appear as GB sliding/diffusion dominate.",
+      "equation": "\\sigma_y = \\sigma_0 + k_{HP} d^{-1/2}"
+    },
+    {
+      "id": "scene_7",
+      "type": "slide",
+      "order": 7,
+      "title": { "en": "Disagreement: LEFM vs EPFM", "zh": "分歧：LEFM vs EPFM" },
+      "keyPoints": ["LEFM: small-scale yielding", "EPFM: plastic zone matters"],
+      "body_zh": "r_p ≪ a 同剩餘截面 → LEFM；否則用 EPFM（J 積分）。",
+      "body_en": "Use LEFM when plastic zone is small vs crack and ligament; otherwise EPFM.",
+      "equation": "K_I = \\beta\\sigma\\sqrt{\\pi a}"
+    },
+    {
+      "id": "scene_8",
+      "type": "quiz",
+      "order": 8,
+      "title": { "en": "Check: strengthening, fracture, fatigue, NDT", "zh": "自測：強化、斷裂、疲勞、NDT" },
+      "questions": [
+        {
+          "id": "q1",
+          "prompt_zh": "Hall-Petch 中 d 減半，晶粒強化項？",
+          "prompt_en": "If d is halved, the grain-size term becomes?",
+          "options": [
+            {"id": "a", "zh": "不變", "en": "Unchanged"},
+            {"id": "b", "zh": "變為 √2 倍", "en": "√2 times larger"},
+            {"id": "c", "zh": "減半", "en": "Halves"},
+            {"id": "d", "zh": "σ_y 一定加倍", "en": "σ_y must double"}
+          ],
+          "answer": "b",
+          "explain_zh": "k·d^(−1/2)：d→d/2 ⇒ 強化項 ×√2；總 σ_y 唔一定加倍。",
+          "explain_en": "Only k·d^(−1/2) scales by √2; σ_0 unchanged."
+        },
+        {
+          "id": "q2",
+          "prompt_zh": "反 Hall-Petch 大約喺邊個尺度？",
+          "prompt_en": "Inverse Hall-Petch near which scale?",
+          "options": [
+            {"id": "a", "zh": "毫米粗晶", "en": "mm coarse grains"},
+            {"id": "b", "zh": "約 10–100 nm", "en": "Roughly 10–100 nm"},
+            {"id": "c", "zh": "只單晶", "en": "Single crystals only"},
+            {"id": "d", "zh": "只高分子", "en": "Polymers only"}
+          ],
+          "answer": "b",
+          "explain_zh": "極細晶粒時晶界滑移/擴散可主導。",
+          "explain_en": "At very fine grains GB sliding/diffusion can dominate."
+        },
+        {
+          "id": "q3",
+          "prompt_zh": "Northridge 材料層面主因？",
+          "prompt_en": "Northridge materials root cause?",
+          "options": [
+            {"id": "a", "zh": "只係長細比", "en": "Slenderness only"},
+            {"id": "b", "zh": "高磷、MnS 夾雜促進解理", "en": "High P, MnS inclusions → cleavage"},
+            {"id": "c", "zh": "混凝土不足", "en": "Weak concrete"},
+            {"id": "d", "zh": "油漆問題", "en": "Paint only"}
+          ],
+          "answer": "b",
+          "explain_zh": "化學同夾雜降低韌性。",
+          "explain_en": "Chemistry and inclusions reduced toughness."
+        },
+        {
+          "id": "q4",
+          "prompt_zh": "Aloha 243 說明邊個模型？",
+          "prompt_en": "Aloha 243 illustrates which model?",
+          "options": [
+            {"id": "a", "zh": "損傷演化（疲勞擴展）", "en": "Damage evolves (fatigue growth)"},
+            {"id": "b", "zh": "只靜態極限強度", "en": "Static strength only"},
+            {"id": "c", "zh": "與應力集中無關", "en": "No stress concentration"},
+            {"id": "d", "zh": "只複合材料", "en": "Composites only"}
+          ],
+          "answer": "a",
+          "explain_zh": "鉚釘孔起裂後經上萬循環擴展。",
+          "explain_en": "Crack growth over many cycles from a rivet hole."
+        },
+        {
+          "id": "q5",
+          "prompt_zh": "LEFM 適用條件？",
+          "prompt_en": "LEFM is appropriate when?",
+          "options": [
+            {"id": "a", "zh": "塑性區遠大於裂紋", "en": "Plastic zone ≫ crack"},
+            {"id": "b", "zh": "塑性區遠小於裂紋同構件（小範圍屈服）", "en": "Plastic zone ≪ crack and component (SSY)"},
+            {"id": "c", "zh": "只高分子", "en": "Polymers only"},
+            {"id": "d", "zh": "永遠唔使檢查", "en": "Never check"}
+          ],
+          "answer": "b",
+          "explain_zh": "小範圍屈服先可以用 K 主導場。",
+          "explain_en": "Small-scale yielding needed for K-dominated field."
+        },
+        {
+          "id": "q6",
+          "prompt_zh": "Paris Region II？",
+          "prompt_en": "Paris Region II is?",
+          "options": [
+            {"id": "a", "zh": "低於閾值", "en": "Below threshold"},
+            {"id": "b", "zh": "穩態 da/dN = C(ΔK)^m", "en": "Steady da/dN = C(ΔK)^m"},
+            {"id": "c", "zh": "K_max→K_IC 失穩", "en": "Unstable near K_IC"},
+            {"id": "d", "zh": "只腐蝕", "en": "Corrosion only"}
+          ],
+          "answer": "b",
+          "explain_zh": "I=閾值，II=Paris，III=接近韌性加速。",
+          "explain_en": "I threshold, II Paris, III near fracture."
+        },
+        {
+          "id": "q7",
+          "prompt_zh": "鋼–空氣界面 UT 反射係數 R？",
+          "prompt_en": "Steel–air UT reflection R is approx?",
+          "options": [
+            {"id": "a", "zh": "接近 0", "en": "Near 0"},
+            {"id": "b", "zh": "接近 1", "en": "Near 1"},
+            {"id": "c", "zh": "永遠 0.5", "en": "Always 0.5"},
+            {"id": "d", "zh": "與 Z 無關", "en": "Independent of Z"}
+          ],
+          "answer": "b",
+          "explain_zh": "R=(Z2−Z1)/(Z2+Z1)；空氣 Z≈0 ⇒ R≈1。",
+          "explain_en": "Z_air≈0 vs steel → R≈1; air gaps are strong reflectors."
+        },
+        {
+          "id": "q8",
+          "prompt_zh": "Scherrer 主要限制？",
+          "prompt_en": "Key Scherrer limitation?",
+          "options": [
+            {"id": "a", "zh": "只適用 d>1mm", "en": "Only d>1mm"},
+            {"id": "b", "zh": "大晶粒（>~100–200 nm）唔準；忽略微應變寬化", "en": "Inaccurate for larger grains; ignores microstrain"},
+            {"id": "c", "zh": "唔需要 X 射線", "en": "No X-rays needed"},
+            {"id": "d", "zh": "只液體", "en": "Liquids only"}
+          ],
+          "answer": "b",
+          "explain_zh": "奈米級較準；粗晶用 EBSD。",
+          "explain_en": "Best for nanoscale; coarse grains need EBSD."
+        }
+      ]
+    },
+    {
+      "id": "scene_9",
+      "type": "interactive",
+      "order": 9,
+      "title": { "en": "Explore: d → σ_y (Hall-Petch)", "zh": "互動：晶粒尺寸 → 屈服強度" },
+      "widget": {
+        "type": "parameter_slider",
+        "concept": "Hall-Petch grain-size strengthening",
+        "params": [
+          {"id": "d_um", "label_zh": "平均晶粒尺寸 d (μm)", "label_en": "Mean grain size d (μm)", "min": 0.01, "max": 500, "scale": "log", "default": 50},
+          {"id": "sigma0", "label_zh": "σ_0 (MPa)", "label_en": "σ_0 (MPa)", "min": 40, "max": 120, "default": 70},
+          {"id": "k", "label_zh": "k_HP (MPa·m^{1/2})", "label_en": "k_HP (MPa·m^{1/2})", "min": 0.4, "max": 1.0, "default": 0.74}
+        ],
+        "formula": "sigma_y = sigma0 + k / sqrt(d_m)",
+        "note_zh": "d 轉米；~10–100 nm 可能反 Hall-Petch。",
+        "note_en": "Convert μm→m. Inverse regime risk below ~10–100 nm."
+      },
+      "learning_goal_zh": "感受 d 對 σ_y 非線性同模型邊界。",
+      "learning_goal_en": "Feel nonlinear d→σ_y and model limits."
+    },
+    {
+      "id": "scene_10",
+      "type": "pbl",
+      "order": 10,
+      "title": { "en": "PBL: Northridge connection toughness upgrade", "zh": "專案：Northridge 節點韌性升級" },
+      "brief_zh": "為 1990 年代初抗彎矩鋼框架提出材料+構造韌性升級，避免重演 Northridge 脆性破壞。",
+      "brief_en": "Propose materials + detailing toughness upgrade for early-1990s steel moment frames.",
+      "target_skills": ["Link chemistry/inclusions to cleavage", "Specify grade/cleanliness", "Detailing + NDT"],
+      "issues": [
+        {"id": "issue_1", "title_zh": "問題診斷", "title_en": "Diagnose", "tasks": ["列出 P、S、MnS、韌性因素", "說明節點危險（三軸、約束、焊縫）"]},
+        {"id": "issue_2", "title_zh": "材料方案", "title_en": "Materials plan", "tasks": ["建議鋼種/清潔度", "連結顯微組織同宏觀斷裂"]},
+        {"id": "issue_3", "title_zh": "構造與驗證", "title_en": "Detailing & verification", "tasks": ["一項節點構造改善", "NDT/試驗驗證"]}
+      ],
+      "deliverable_zh": "一頁備忘：問題 → 機制 → 方案 → 驗證",
+      "deliverable_en": "One-page memo: Problem → Mechanism → Solution → Verification"
+    }
+  ]
+}
