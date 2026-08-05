@@ -1,0 +1,17 @@
+{
+  "demo": "civil-bootcamp → OpenMAIC-style scenes",
+  "courses": [
+    {
+      "file": "1.035-scenes.json",
+      "title": "1.035 Multiscale Characterization",
+      "scenes": 10,
+      "quiz_questions": 8
+    },
+    {
+      "file": "1.037-scenes.json",
+      "title": "1.037 Soil Mechanics",
+      "scenes": 9,
+      "quiz_questions": 4
+    }
+  ]
+}
