@@ -29,7 +29,7 @@ export default function App() {
   const [filterHasScholars, setFilterHasScholars] = useState(false)
   const [filterHasEquations, setFilterHasEquations] = useState(false)
   const [filterMinLines, setFilterMinLines] = useState(0)
-  const [sortBy, setSortBy] = useState<'newest' | 'lines' | 'title' | 'category'>('category')
+  const [sortBy, setSortBy] = useState<'newest' | 'lines' | 'title' | 'category' | 'mixed'>('mixed')
 
   // Following / Saved
   const [followed, setFollowed] = useState<Set<string>>(new Set())
@@ -84,23 +84,48 @@ export default function App() {
       result = result.filter(c => c.lines >= filterMinLines)
     }
 
-    // Sort — always stable (id as final tiebreaker so order never "random")
+    // Sort — always stable
     result = [...result]
     if (sortBy === 'lines') {
       result.sort((a, b) => b.lines - a.lines || a.id.localeCompare(b.id))
     } else if (sortBy === 'title') {
       result.sort((a, b) => a.title.localeCompare(b.title) || a.id.localeCompare(b.id))
     } else if (sortBy === 'newest') {
-      // No real timestamps yet — reverse id gives a deterministic "newest-ish" feel
       result.sort((a, b) => b.id.localeCompare(a.id))
-    } else {
-      // category (default)
+    } else if (sortBy === 'category') {
       result.sort(
         (a, b) =>
           a.category.localeCompare(b.category) ||
           a.title.localeCompare(b.title) ||
           a.id.localeCompare(b.id)
       )
+    } else {
+      // default: interleave categories (混合穿插) — stable round-robin
+      const byCat: Record<string, Course[]> = {}
+      for (const c of result) {
+        const k = c.category || 'Other'
+        if (!byCat[k]) byCat[k] = []
+        byCat[k].push(c)
+      }
+      // stable order inside each category
+      for (const k of Object.keys(byCat)) {
+        byCat[k].sort((a, b) => a.title.localeCompare(b.title) || a.id.localeCompare(b.id))
+      }
+      const catKeys = Object.keys(byCat).sort()
+      const interleaved: Course[] = []
+      let i = 0
+      let added = true
+      while (added) {
+        added = false
+        for (const k of catKeys) {
+          if (i < byCat[k].length) {
+            interleaved.push(byCat[k][i])
+            added = true
+          }
+        }
+        i++
+      }
+      result = interleaved
     }
 
     return result
