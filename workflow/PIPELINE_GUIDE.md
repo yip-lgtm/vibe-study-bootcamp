@@ -79,3 +79,46 @@ python3 _agents/professor_supervisor/review.py --all
 ---
 
 *Last Updated: 2026-08*
+
+---
+
+## Director Pattern (LangGraph-style)
+
+> **NEW (2026-08):** The pipeline is now built on a **StateGraph** with
+> a director node, inspired by [THU-MAIC/OpenMAIC](https://github.com/THU-MAIC/OpenMAIC).
+> See [`DIRECTOR_PATTERN.md`](./DIRECTOR_PATTERN.md) for full details.
+
+### Quick start with new pattern
+
+```bash
+# Run on a single course with director routing
+python3 _pipeline/director_pipeline.py --course <path> --stream
+
+# Allow up to 3 revision cycles
+python3 _pipeline/director_pipeline.py --course <path> --max-iterations 3
+
+# Run on all courses in the current repo
+python3 _pipeline/director_pipeline.py --all
+```
+
+### Topology
+
+```
+START → director ──(engineer)────→ engineer → researcher → data_extractor
+                    ─(professor)──→ professor_supervisor
+                    ─(END)──→ END
+       (loops back via director for REVISE)
+```
+
+### Director decision logic
+
+| State | Director routes to |
+|---|---|
+| `body` empty | `engineer` |
+| `review` empty | `professor_supervisor` |
+| `decision == "REVISE"` & `iteration < max` | `engineer` (cycle) |
+| `decision == "APPROVED"` / `REJECT` / max iterations | `END` |
+
+The original `review.py` quality gate is unchanged — it remains the
+single source of truth for scoring. The director pattern is purely a
+**flow control** innovation on top of the existing pipeline.
