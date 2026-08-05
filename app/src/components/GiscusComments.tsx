@@ -8,21 +8,10 @@ interface Props {
   title?: string
 }
 
-/**
- * Giscus discussion widget.
- *
- * Setup required (one-time):
- * 1. Repo Settings → General → Features → Enable Discussions
- * 2. Go to https://giscus.app → select this repo → create/choose a category
- *    (recommended name: "Course Comments")
- * 3. Copy repoId + categoryId and paste into the constants below
- * 4. Install the Giscus GitHub App when prompted by giscus.app
- */
 const REPO = 'yip-lgtm/vibe-study-bootcamp'
-// ⬇️ Replace these two after configuring at https://giscus.app
-const REPO_ID = 'R_kgDOTt1gqQ'           // placeholder — update after setup
-const CATEGORY = 'Course Comments'
-const CATEGORY_ID = 'DIC_kwDOTt1gqc4AAAAA' // placeholder — update after setup
+const REPO_ID = 'R_kgDOTt1gqQ'
+const CATEGORY = 'General'
+const CATEGORY_ID = 'DIC_kwDOTt1gqc4DCs88'
 
 export function GiscusComments({ term, title = '討論 / Discussion' }: Props) {
   const [ready, setReady] = useState(false)
@@ -55,10 +44,10 @@ export function GiscusComments({ term, title = '討論 / Discussion' }: Props) {
           categoryId={CATEGORY_ID}
           mapping="specific"
           term={term}
-          strict="1"
+          strict="0"
           reactionsEnabled="1"
           emitMetadata="0"
-          inputPosition="top"
+          inputPosition="bottom"
           theme="dark"
           lang="zh-TW"
           loading="lazy"
