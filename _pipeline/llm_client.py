@@ -217,7 +217,11 @@ def complete(
         "anthropic-version": "2023-06-01",
     }
     if cfg.auth_style == "bearer":
-        headers["Authorization"] = f"Bearer {cfg.api_key}"
+        # For Bearer auth, strip sk-cp- prefix if present (key format for auth differs from routing)
+        key = cfg.api_key
+        if key.startswith("sk-cp-"):
+            key = key[len("sk-cp-"):]
+        headers["Authorization"] = f"Bearer {key}"
     elif cfg.auth_style == "x-api-key":
         headers["x-api-key"] = cfg.api_key
 
