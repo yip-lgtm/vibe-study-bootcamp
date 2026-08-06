@@ -160,7 +160,7 @@ def main():
     parser.add_argument("--branch", default="main", help="branch for --repo mode (default main)")
     args = parser.parse_args()
 
-    if args.repo:
+    if args.course:
         print(f"Pipeline (Director pattern): {args.course}")
         print("=" * 60)
         # Reset token usage tracker for this run
