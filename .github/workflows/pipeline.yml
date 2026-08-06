@@ -19,6 +19,7 @@ on:
 env:
   PYTHONPATH: ${{ github.workspace }}
   MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
 jobs:
   pipeline:
@@ -42,7 +43,7 @@ jobs:
             psych-self-study-hku \
             PhysicsSelfStudy; do
             if [ ! -d "$repo" ]; then
-              git clone https://${{ secrets.GITHUB_PUSH_TOKEN }}@github.com/yip-lgtm/$repo.git
+              git clone https://${{ secrets.GH_TOKEN }}@github.com/yip-lgtm/$repo.git
             else
               (cd $repo && git pull)
             fi
@@ -107,7 +108,7 @@ jobs:
               if [ -n "$(git status --porcelain)" ]; then \
                 git add -A && \
                 git commit -m "[CI] LLM pipeline update $(date -u +%Y-%m-%dT%H:%M)" && \
-                git push https://${{ secrets.GITHUB_PUSH_TOKEN }}@github.com/yip-lgtm/$repo.git HEAD; \
+                git push https://${{ secrets.GH_TOKEN }}@github.com/yip-lgtm/$repo.git HEAD; \
               fi)
           done
 
