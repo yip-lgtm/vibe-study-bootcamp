@@ -123,7 +123,7 @@ def detect_provider() -> ProviderConfig:
             base_url=os.environ.get("MINIMAX_BASE_URL", _minimax_base_for_key(key)),
             api_key=key,
             default_model=os.environ.get("MINIMAX_MODEL", MINIMAX_MODEL),
-            auth_style="bearer",  # Use bearer + x-api-key (see header section)
+            auth_style="x-api-key",  # MiniMax uses x-api-key header (Bearer fails in some envs)
         )
     if os.environ.get("ANTHROPIC_API_KEY"):
         return ProviderConfig(
@@ -228,14 +228,13 @@ def complete(
     }
     if cfg.auth_style == "bearer":
         headers["Authorization"] = f"Bearer {cfg.api_key}"
-        # MiniMax also wants x-api-key (some proxies/routing require it)
+        # MiniMax also wants x-api-key (required in some network environments)
         if cfg.name == "MiniMax":
             headers["x-api-key"] = cfg.api_key
     elif cfg.auth_style == "x-api-key":
         headers["x-api-key"] = cfg.api_key
-        # Also send Bearer for MiniMax (belt-and-suspenders)
-        if cfg.name == "MiniMax":
-            headers["Authorization"] = f"Bearer {cfg.api_key}"
+        # Remove any conflicting Authorization header for x-api-key only style
+        headers.pop("Authorization", None)
 
     # Body: Anthropic format (works for MiniMax too)
     if cfg.name in ("Anthropic", "MiniMax"):
