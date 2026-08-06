@@ -39,9 +39,6 @@ import httpx
 log = logging.getLogger(__name__)
 
 
-# Module-level cache for auth failures (avoid hammering API with bad key)
-_last_auth_error: Optional[str] = None
-
 # Module-level tracking of all LLM calls (for token usage reporting)
 _all_responses: List["LLMResponse"] = []
 
@@ -264,14 +261,6 @@ def complete(
             "Set MINIMAX_API_KEY / ANTHROPIC_API_KEY / OPENAI_API_KEY."
         )
 
-    # Quick-fail cache: if previous call returned 401, don't try again
-    global _last_auth_error
-    if _last_auth_error:
-        raise RuntimeError(
-            f"Previous LLM call failed with auth error. "
-            f"Falling back to deterministic mode. Error: {_last_auth_error[:200]}"
-        )
-
     t0 = time.time()
     try:
         with httpx.Client(timeout=timeout) as client:
@@ -279,8 +268,6 @@ def complete(
             r.raise_for_status()
             data = r.json()
     except httpx.HTTPStatusError as e:
-        if e.response.status_code in (401, 403):
-            _last_auth_error = e.response.text[:500]
         log.error(f"LLM API error: {e.response.status_code} {e.response.text[:500]}")
         raise
     latency_ms = int((time.time() - t0) * 1000)
