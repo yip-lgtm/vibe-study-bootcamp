@@ -83,11 +83,11 @@ class ProviderConfig:
     auth_style: str  # "bearer" or "x-api-key"
 
 
-# MiniMax (Anthropic-compatible API)
-# IMPORTANT: sk-cp- Subscription Keys (Token Plan) require api.minimax.io
-# NOT api.minimaxi.com (which is for pay-as-you-go only)
-MINIMAX_TOKEN_PLAN_BASE = "https://api.minimax.io/anthropic"
-MINIMAX_PAYG_BASE = "https://api.minimaxi.com/anthropic/v1"
+# MiniMax (OpenAI-compatible API)
+# IMPORTANT: sk-cp- Subscription Keys (Token Plan) use api.minimax.io (OpenAI-format)
+# api.minimaxi.com is for pay-as-you-go (Chinese region)
+MINIMAX_TOKEN_PLAN_BASE = "https://api.minimax.io/v1"
+MINIMAX_PAYG_BASE = "https://api.minimaxi.com/v1"
 MINIMAX_MODEL = "MiniMax-M3"  # default model
 
 # Heuristic: sk-cp- keys are Token Plan (use api.minimax.io)
@@ -120,7 +120,7 @@ def detect_provider() -> ProviderConfig:
             base_url=os.environ.get("MINIMAX_BASE_URL", _minimax_base_for_key(key)),
             api_key=key,
             default_model=os.environ.get("MINIMAX_MODEL", MINIMAX_MODEL),
-            auth_style="x-api-key",  # MiniMax uses x-api-key header (Bearer fails in some envs)
+            auth_style="bearer",  # OpenAI-format endpoint uses Bearer auth
         )
     if os.environ.get("ANTHROPIC_API_KEY"):
         return ProviderConfig(
@@ -205,18 +205,11 @@ def complete(
     model = model or cfg.default_model
 
     # Build request
-    # MiniMax exposes Anthropic-compatible API at /anthropic/v1/messages
-    # (so the base URL ends at /anthropic, we add /v1/messages)
-    if cfg.name == "Anthropic":
+    # MiniMax uses OpenAI-compatible /v1/chat/completions (works better in cloud envs)
+    if cfg.name in ("MiniMax", "OpenAI"):
+        url = f"{cfg.base_url.rstrip('/')}/chat/completions"
+    elif cfg.name == "Anthropic":
         url = f"{cfg.base_url.rstrip('/')}/v1/messages"
-    elif cfg.name == "MiniMax":
-        # Base URL is /anthropic (Token Plan) or /anthropic/v1 (PAYG)
-        # We always need to add /v1/messages
-        base = cfg.base_url.rstrip('/')
-        if base.endswith('/v1'):
-            url = f"{base}/messages"
-        else:
-            url = f"{base}/v1/messages"
     else:
         url = f"{cfg.base_url.rstrip('/')}/chat/completions"
     headers = {
@@ -225,16 +218,11 @@ def complete(
     }
     if cfg.auth_style == "bearer":
         headers["Authorization"] = f"Bearer {cfg.api_key}"
-        # MiniMax also wants x-api-key (required in some network environments)
-        if cfg.name == "MiniMax":
-            headers["x-api-key"] = cfg.api_key
     elif cfg.auth_style == "x-api-key":
         headers["x-api-key"] = cfg.api_key
-        # Remove any conflicting Authorization header for x-api-key only style
-        headers.pop("Authorization", None)
 
-    # Body: Anthropic format (works for MiniMax too)
-    if cfg.name in ("Anthropic", "MiniMax"):
+    # Body: Anthropic format
+    if cfg.name == "Anthropic":
         body = {
             "model": model,
             "max_tokens": max_tokens,
@@ -243,7 +231,7 @@ def complete(
         }
         if system:
             body["system"] = system
-    else:  # OpenAI format
+    else:  # OpenAI format (MiniMax, OpenAI, Ollama)
         msgs = []
         if system:
             msgs.append({"role": "system", "content": system})
@@ -272,8 +260,9 @@ def complete(
         raise
     latency_ms = int((time.time() - t0) * 1000)
 
-    # Parse response (Anthropic format)
-    if cfg.name in ("Anthropic", "MiniMax"):
+    # Parse response
+    if cfg.name == "Anthropic":
+        # Anthropic format: {"content": [{"type": "text", "text": "..."}]}
         text = ""
         for block in data.get("content", []):
             if block.get("type") == "text":
@@ -290,9 +279,18 @@ def complete(
         )
         _all_responses.append(resp)
         return resp
-    else:  # OpenAI format
-        text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+    else:
+        # OpenAI format: {"choices": [{"message": {"content": "..."}}]}
+        raw_text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+        # Strip MiniMax reasoning tags (MiniMax-M3 outputs <think>...</think> before final answer)
+        import re
+        text = re.sub(r'<think>.*?</think>', '', raw_text, flags=re.DOTALL).strip()
         usage = data.get("usage", {})
+        # If all tokens went to thinking (empty text), use raw content minus thinking
+        if not text and raw_text:
+            # Extract only non-thinking parts
+            parts = re.split(r'</think>', raw_text)
+            text = parts[-1].strip() if len(parts) > 1 else raw_text.strip()
         resp = LLMResponse(
             text=text,
             model=data.get("model", model),
