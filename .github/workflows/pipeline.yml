@@ -60,36 +60,36 @@ jobs:
       - name: Run pipeline on Civil Bootcamp
         if: inputs.repo == 'civil' || inputs.repo == 'all' || github.event_name == 'schedule'
         run: |
-          python3 .pipeline/director_pipeline.py \
-            --repo /home/runner/work/vibe-study-bootcamp/vibe-study-bootcamp/civil-bootcamp \
+          python3 _pipeline/director_pipeline.py \
+            --repo civil-bootcamp \
             --batch ${{ inputs.batch_size || '20' }}
 
       - name: Run pipeline on History
         if: inputs.repo == 'history' || inputs.repo == 'all' || github.event_name == 'schedule'
         run: |
-          python3 .pipeline/director_pipeline.py \
-            --repo /home/runner/work/vibe-study-bootcamp/vibe-study-bootcamp/HKU-Harvard-History-Self-Study \
+          python3 _pipeline/director_pipeline.py \
+            --repo HKU-Harvard-History-Self-Study \
             --batch ${{ inputs.batch_size || '20' }}
 
       - name: Run pipeline on MechEng
         if: inputs.repo == 'mech' || inputs.repo == 'all' || github.event_name == 'schedule'
         run: |
-          python3 .pipeline/director_pipeline.py \
-            --repo /home/runner/work/vibe-study-bootcamp/vibe-study-bootcamp/mech-Eng-Bootcamp \
+          python3 _pipeline/director_pipeline.py \
+            --repo mech-Eng-Bootcamp \
             --batch ${{ inputs.batch_size || '20' }}
 
       - name: Run pipeline on Psych
         if: inputs.repo == 'psych' || inputs.repo == 'all' || github.event_name == 'schedule'
         run: |
-          python3 .pipeline/director_pipeline.py \
-            --repo /home/runner/work/vibe-study-bootcamp/vibe-study-bootcamp/psych-self-study-hku \
+          python3 _pipeline/director_pipeline.py \
+            --repo psych-self-study-hku \
             --batch ${{ inputs.batch_size || '20' }}
 
       - name: Run pipeline on Physics
         if: inputs.repo == 'physics' || inputs.repo == 'all' || github.event_name == 'schedule'
         run: |
-          python3 .pipeline/director_pipeline.py \
-            --repo /home/runner/work/vibe-study-bootcamp/vibe-study-bootcamp/PhysicsSelfStudy \
+          python3 _pipeline/director_pipeline.py \
+            --repo PhysicsSelfStudy \
             --branch master \
             --batch ${{ inputs.batch_size || '20' }}
 
