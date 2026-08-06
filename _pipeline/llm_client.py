@@ -117,10 +117,12 @@ OLLAMA_MODEL = "llama3.1"
 def detect_provider() -> ProviderConfig:
     """Auto-detect provider from environment variables (priority: MiniMax > Anthropic > OpenAI > Ollama)."""
     if os.environ.get("MINIMAX_API_KEY"):
-        key = os.environ.get("MINIMAX_API_KEY")
+        raw_key = os.environ.get("MINIMAX_API_KEY")
+        # Strip sk-cp- prefix for the secret value (keep prefix for routing)
+        key = raw_key[len("sk-cp-"):] if raw_key.startswith("sk-cp-") else raw_key
         return ProviderConfig(
             name="MiniMax",
-            base_url=os.environ.get("MINIMAX_BASE_URL", _minimax_base_for_key(key)),
+            base_url=os.environ.get("MINIMAX_BASE_URL", _minimax_base_for_key(raw_key)),
             api_key=key,
             default_model=os.environ.get("MINIMAX_MODEL", MINIMAX_MODEL),
             auth_style="x-api-key",  # MiniMax prefers x-api-key header
