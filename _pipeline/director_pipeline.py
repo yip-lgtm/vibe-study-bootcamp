@@ -132,19 +132,35 @@ def run_course(course_path: str, stream: bool = False, max_iterations: int = 3) 
         elif ctype == "node_error":
             print(f"  ✗ {node} ERROR: {chunk.get('error')}")
 
-    return graph.invoke(initial, config={"writer": writer})
+    final = graph.invoke(initial, config={"writer": writer})
+
+    # Write enhanced body back to course file (only for APPROVED courses)
+    if final.decision == "APPROVED" and final.body:
+        try:
+            with open(course_path, "w", encoding="utf-8") as f:
+                f.write(final.body)
+        except Exception as e:
+            pass  # Don't fail the run if write fails
+
+    return final
 
 
 def main():
+    import subprocess
+
     parser = argparse.ArgumentParser(description="Director-pattern Multi-Agent Pipeline")
     parser.add_argument("--course", help="path to course markdown file")
     parser.add_argument("--all", action="store_true", help="run all courses in current repo")
     parser.add_argument("--stream", action="store_true", help="stream events to stdout")
     parser.add_argument("--max-iterations", type=int, default=3, help="max revision cycles")
     parser.add_argument("--json", action="store_true", help="output final state as JSON")
+    # GitHub Actions / server-mode arguments
+    parser.add_argument("--repo", help="path to repo root (for GitHub Actions incremental mode)")
+    parser.add_argument("--batch", type=int, default=20, help="courses per run in repo mode (default 20)")
+    parser.add_argument("--branch", default="main", help="branch for --repo mode (default main)")
     args = parser.parse_args()
 
-    if args.course:
+    if args.repo:
         print(f"Pipeline (Director pattern): {args.course}")
         print("=" * 60)
         # Reset token usage tracker for this run
@@ -171,6 +187,69 @@ def main():
         if args.json:
             from _pipeline.state import snapshot
             print(json.dumps(snapshot(final), ensure_ascii=False, indent=2))
+
+    elif args.repo:
+        # Server/CRON mode: incremental batch processing
+        # Only processes courses not yet modified (survives sandbox resets)
+        from _pipeline.llm_client import reset_usage_tracking, get_usage_report
+        import subprocess
+
+        repo_root = Path(args.repo)
+        branch = args.branch
+        skip_dirs = {'.git', '_agents', '_pipeline', 'node_modules', '.github', '__pycache__'}
+
+        # Get already-modified files (already processed)
+        result = subprocess.run(
+            ['git', 'status', '--porcelain'], cwd=repo_root, capture_output=True, text=True
+        )
+        modified = set()
+        for line in result.stdout.strip().split('\n'):
+            if line.startswith('M ') or line.startswith('?? '):
+                path = line[3:].strip()
+                if path.endswith('.md') and '_pipeline' not in path and 'review.json' not in path:
+                    modified.add(path)
+
+        # Find all courses
+        all_courses = []
+        for md in repo_root.rglob('*.md'):
+            parts = md.parts[len(repo_root.parts):]
+            if any(s in parts for s in skip_dirs):
+                continue
+            if md.name in ('README.md', 'AGENTS.md'):
+                continue
+            rel = str(Path(*parts))
+            all_courses.append((md, rel))
+
+        remaining = [(p, r) for p, r in all_courses if r not in modified]
+        done = len(all_courses) - len(remaining)
+        print(f'[{repo_root.name}] {done}/{len(all_courses)} done, {len(remaining)} remaining')
+
+        if not remaining:
+            print(f'[{repo_root.name}] All done!')
+            sys.exit(0)
+
+        batch = remaining[:args.batch]
+        total_in = total_out = 0
+        start = time.time()
+
+        for i, (course_path, rel) in enumerate(batch, 1):
+            print(f'[{i}/{len(batch)}] {rel}')
+            reset_usage_tracking()
+            t0 = time.time()
+            try:
+                final = run_course(str(course_path), stream=False, max_iterations=1)
+                elapsed = time.time() - t0
+                usage = get_usage_report()
+                total_in += usage['input_tokens']
+                total_out += usage['output_tokens']
+                wrote = "✓" if (final.decision == 'APPROVED' and final.body) else ""
+                status = f'APPROVED {final.final_score}' if final.decision == 'APPROVED' else f'{final.decision} {final.final_score}'
+                print(f'  -> {status} ({elapsed:.0f}s, {usage["total_tokens"]:,} tok) {wrote}')
+            except Exception as e:
+                print(f'  -> ERROR: {e}')
+
+        print(f'[{repo_root.name}] Batch: {len(batch)} processed in {time.time()-start:.0f}s')
+        print(f'[{repo_root.name}] Tokens: {total_in:,}+{total_out:,}={total_in+total_out:,}')
 
     elif args.all:
         # Find all .md files in the current repo
