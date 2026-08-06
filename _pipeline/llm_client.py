@@ -123,7 +123,7 @@ def detect_provider() -> ProviderConfig:
             base_url=os.environ.get("MINIMAX_BASE_URL", _minimax_base_for_key(key)),
             api_key=key,
             default_model=os.environ.get("MINIMAX_MODEL", MINIMAX_MODEL),
-            auth_style="bearer",  # MiniMax uses bearer for Anthropic-compatible API
+            auth_style="x-api-key",  # MiniMax prefers x-api-key header
         )
     if os.environ.get("ANTHROPIC_API_KEY"):
         return ProviderConfig(
