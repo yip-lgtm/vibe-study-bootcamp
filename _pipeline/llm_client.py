@@ -117,15 +117,13 @@ OLLAMA_MODEL = "llama3.1"
 def detect_provider() -> ProviderConfig:
     """Auto-detect provider from environment variables (priority: MiniMax > Anthropic > OpenAI > Ollama)."""
     if os.environ.get("MINIMAX_API_KEY"):
-        raw_key = os.environ.get("MINIMAX_API_KEY")
-        # Strip sk-cp- prefix for the secret value (keep prefix for routing)
-        key = raw_key[len("sk-cp-"):] if raw_key.startswith("sk-cp-") else raw_key
+        key = os.environ.get("MINIMAX_API_KEY")
         return ProviderConfig(
             name="MiniMax",
-            base_url=os.environ.get("MINIMAX_BASE_URL", _minimax_base_for_key(raw_key)),
+            base_url=os.environ.get("MINIMAX_BASE_URL", _minimax_base_for_key(key)),
             api_key=key,
             default_model=os.environ.get("MINIMAX_MODEL", MINIMAX_MODEL),
-            auth_style="x-api-key",  # MiniMax prefers x-api-key header
+            auth_style="bearer",  # Use bearer + x-api-key (see header section)
         )
     if os.environ.get("ANTHROPIC_API_KEY"):
         return ProviderConfig(
@@ -230,8 +228,14 @@ def complete(
     }
     if cfg.auth_style == "bearer":
         headers["Authorization"] = f"Bearer {cfg.api_key}"
+        # MiniMax also wants x-api-key (some proxies/routing require it)
+        if cfg.name == "MiniMax":
+            headers["x-api-key"] = cfg.api_key
     elif cfg.auth_style == "x-api-key":
         headers["x-api-key"] = cfg.api_key
+        # Also send Bearer for MiniMax (belt-and-suspenders)
+        if cfg.name == "MiniMax":
+            headers["Authorization"] = f"Bearer {cfg.api_key}"
 
     # Body: Anthropic format (works for MiniMax too)
     if cfg.name in ("Anthropic", "MiniMax"):
