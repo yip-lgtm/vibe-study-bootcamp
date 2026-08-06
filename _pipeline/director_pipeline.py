@@ -23,7 +23,9 @@ Run:
 from __future__ import annotations
 import argparse
 import json
+import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Any, Dict
 
@@ -146,8 +148,6 @@ def run_course(course_path: str, stream: bool = False, max_iterations: int = 3) 
 
 
 def main():
-    import subprocess
-
     parser = argparse.ArgumentParser(description="Director-pattern Multi-Agent Pipeline")
     parser.add_argument("--course", help="path to course markdown file")
     parser.add_argument("--all", action="store_true", help="run all courses in current repo")
@@ -190,9 +190,7 @@ def main():
 
     elif args.repo:
         # Server/CRON mode: incremental batch processing
-        # Only processes courses not yet modified (survives sandbox resets)
         from _pipeline.llm_client import reset_usage_tracking, get_usage_report
-        import subprocess
 
         repo_root = Path(args.repo)
         branch = args.branch
