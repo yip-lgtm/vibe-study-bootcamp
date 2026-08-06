@@ -83,11 +83,11 @@ class ProviderConfig:
     auth_style: str  # "bearer" or "x-api-key"
 
 
-# MiniMax (OpenAI-compatible API)
-# IMPORTANT: sk-cp- Subscription Keys (Token Plan) use api.minimax.io (OpenAI-format)
+# MiniMax (Anthropic-compatible API)
+# IMPORTANT: sk-cp- Subscription Keys (Token Plan) use api.minimax.io (Anthropic-format)
 # api.minimaxi.com is for pay-as-you-go (Chinese region)
-MINIMAX_TOKEN_PLAN_BASE = "https://api.minimax.io/v1"
-MINIMAX_PAYG_BASE = "https://api.minimaxi.com/v1"
+MINIMAX_TOKEN_PLAN_BASE = "https://api.minimax.io"
+MINIMAX_PAYG_BASE = "https://api.minimaxi.com"
 MINIMAX_MODEL = "MiniMax-M3"  # default model
 
 # Heuristic: sk-cp- keys are Token Plan (use api.minimax.io)
@@ -120,7 +120,7 @@ def detect_provider() -> ProviderConfig:
             base_url=os.environ.get("MINIMAX_BASE_URL", _minimax_base_for_key(key)),
             api_key=key,
             default_model=os.environ.get("MINIMAX_MODEL", MINIMAX_MODEL),
-            auth_style="bearer",  # OpenAI-format endpoint uses Bearer auth
+            auth_style="x-api-key",  # Anthropic endpoint requires x-api-key header
         )
     if os.environ.get("ANTHROPIC_API_KEY"):
         return ProviderConfig(
@@ -205,11 +205,15 @@ def complete(
     model = model or cfg.default_model
 
     # Build request
-    # MiniMax uses OpenAI-compatible /v1/chat/completions (works better in cloud envs)
-    if cfg.name in ("MiniMax", "OpenAI"):
-        url = f"{cfg.base_url.rstrip('/')}/chat/completions"
-    elif cfg.name == "Anthropic":
+    if cfg.name == "Anthropic":
         url = f"{cfg.base_url.rstrip('/')}/v1/messages"
+    elif cfg.name == "MiniMax":
+        # MiniMax Anthropic-compatible endpoint: /anthropic/v1/messages
+        base = cfg.base_url.rstrip('/')
+        if base.endswith('/v1'):
+            url = f"{base}/messages"
+        else:
+            url = f"{base}/anthropic/v1/messages"
     else:
         url = f"{cfg.base_url.rstrip('/')}/chat/completions"
     headers = {
@@ -217,16 +221,12 @@ def complete(
         "anthropic-version": "2023-06-01",
     }
     if cfg.auth_style == "bearer":
-        # For Bearer auth, strip sk-cp- prefix if present (key format for auth differs from routing)
-        key = cfg.api_key
-        if key.startswith("sk-cp-"):
-            key = key[len("sk-cp-"):]
-        headers["Authorization"] = f"Bearer {key}"
+        headers["Authorization"] = f"Bearer {cfg.api_key}"
     elif cfg.auth_style == "x-api-key":
         headers["x-api-key"] = cfg.api_key
 
-    # Body: Anthropic format
-    if cfg.name == "Anthropic":
+    # Body: Anthropic format (MiniMax + Anthropic)
+    if cfg.name in ("Anthropic", "MiniMax"):
         body = {
             "model": model,
             "max_tokens": max_tokens,
@@ -235,7 +235,7 @@ def complete(
         }
         if system:
             body["system"] = system
-    else:  # OpenAI format (MiniMax, OpenAI, Ollama)
+    else:  # OpenAI format (OpenAI, Ollama)
         msgs = []
         if system:
             msgs.append({"role": "system", "content": system})
@@ -264,9 +264,8 @@ def complete(
         raise
     latency_ms = int((time.time() - t0) * 1000)
 
-    # Parse response
-    if cfg.name == "Anthropic":
-        # Anthropic format: {"content": [{"type": "text", "text": "..."}]}
+    # Parse response: Anthropic format
+    if cfg.name in ("Anthropic", "MiniMax"):
         text = ""
         for block in data.get("content", []):
             if block.get("type") == "text":
@@ -284,17 +283,11 @@ def complete(
         _all_responses.append(resp)
         return resp
     else:
-        # OpenAI format: {"choices": [{"message": {"content": "..."}}]}
+        # OpenAI format
         raw_text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-        # Strip MiniMax reasoning tags (MiniMax-M3 outputs <think>...</think> before final answer)
         import re
         text = re.sub(r'<think>.*?</think>', '', raw_text, flags=re.DOTALL).strip()
         usage = data.get("usage", {})
-        # If all tokens went to thinking (empty text), use raw content minus thinking
-        if not text and raw_text:
-            # Extract only non-thinking parts
-            parts = re.split(r'</think>', raw_text)
-            text = parts[-1].strip() if len(parts) > 1 else raw_text.strip()
         resp = LLMResponse(
             text=text,
             model=data.get("model", model),
