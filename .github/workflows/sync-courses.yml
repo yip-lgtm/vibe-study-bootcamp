@@ -1,0 +1,43 @@
+name: Sync Courses
+
+on:
+  # Run when any bootcamp repo pushes
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout vibe-study-bootcamp
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Sync courses
+        run: node scripts/sync-courses.js
+
+      - name: Check diff
+        id: diff
+        run: |
+          git status --short
+          if git diff --stat | grep -q courses.json; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit & Push
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name "Mavis Bot"
+          git config user.email "mavis@agent.local"
+          git add app/src/data/courses.json
+          git commit -m "chore: sync $(date '+%Y-%m-%d %H:%M') — $(node -e "const d=require('./app/src/data/courses.json'); console.log(d.total + ' courses')")"
+          git push
