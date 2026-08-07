@@ -22,7 +22,7 @@ const REPOS = [
     category: 'Civil Engineering',
     branch: 'main',
     type: 'glob',
-    patterns: ['MIT_CEE_*/**/*.md', 'MIT_CEE_*.md'],
+    patterns: ['MIT_CEE_*/**/*.md', 'MIT_CEE_*.md', 'MIT_CEE_*/*.md'],
   },
   {
     name: 'PhysicsSelfStudy',
@@ -40,7 +40,7 @@ const REPOS = [
     category: 'History',
     branch: 'main',
     type: 'glob',
-    patterns: ['01_HKU_Courses/*.md', '02_Harvard_Courses/**/*.md', '00_大綱/**/*.md'],
+    patterns: ['01_HKU_Courses/*.md', '01_HKU_Courses/**/*.md', '02_Harvard_Courses/**/*.md', '00_大綱/*.md', '00_大綱/**/*.md'],
   },
   {
     name: 'mech-Eng-Bootcamp',
@@ -49,7 +49,7 @@ const REPOS = [
     category: 'Mech-Eng',
     branch: 'main',
     type: 'glob',
-    patterns: ['mae-bootcamp/*.md', 'mae-bootcamp/courses/*.md'],
+    patterns: ['mae-bootcamp/*.md', 'mae-bootcamp/**/*.md'],
   },
   {
     name: 'psych-self-study-hku',
@@ -67,11 +67,33 @@ const REPOS = [
     branch: 'main',
     type: 'subdir',
   },
+  {
+    name: 'polyu-msc-digital-economics',
+    org: 'yip-lgtm',
+    url: 'https://github.com/yip-lgtm/polyu-msc-digital-economics.git',
+    category: 'Digital Economics',
+    branch: 'main',
+    type: 'glob',
+    patterns: ['Week*/*.md'],
+    exclude_files: [
+      'Notes_Template.md',
+      'Notes_Template_ANSWERS.md',
+      'completion.md',
+    ],
+  },
 ];
 
 const TMP_DIR = '/tmp/bootcamp-sync';
 const SKIP_DIRS = new Set(['.git', '_agents', '_pipeline', 'node_modules', '.github', '__pycache__', '.venv', 'venv', '.venv']);
-const SKIP_FILES = new Set(['README.md', 'AGENTS.md', '._enriched_files.txt', 'review.json', '.DS_Store']);
+const SKIP_FILES = new Set([
+  'README.md', 'AGENTS.md', '._enriched_files.txt', 'review.json', '.DS_Store',
+  'CHANGELOG.md', 'CONTRIBUTING.md', 'LICENSE', 'FAQ.md', 'STRUCTURE.md',
+  'ROADMAP.md', 'SETUP.md', 'SETUP_AUTOMATION_PROMPT.md',
+  'LEARNING_TRACKER.md', 'progress_log.md', 'cron_examples.md',
+  'WEEK_COMPLETION_TEMPLATES.md', '_template_completion.md',
+  'Master_Tracking.md', 'polyu_msc_plan.md', 'paper_trading_results.md',
+  'PULL_REQUEST_TEMPLATE.md', 'STUDY_PLAN.md',
+]);
 
 function run(cmd, opts = {}) {
   try {
@@ -233,21 +255,22 @@ function scanRepo(repo) {
     } catch (e) {}
   }
 
-  function walkGlob(dir, patterns) {
+  function walkGlob(dir, patterns, excludeFiles = []) {
+    function globToRegex(pat) {
+      // Convert glob pattern to regex
+      const parts = pat.split('/');
+      const reParts = parts.map(p => {
+        if (p === '**') return '.*';
+        if (p === '*') return '[^/]*';
+        return p.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]*');
+      });
+      return new RegExp('^' + reParts.join('/') + '$');
+    }
+
     function matches(rel) {
       for (const pat of patterns) {
-        const parts = pat.split('/');
-        const relParts = rel.split('/');
-        let pi = 0, ri = 0;
-        while (pi < parts.length && ri < relParts.length) {
-          const p = parts[pi];
-          const r = relParts[ri];
-          if (p === '**') { pi++; continue; }
-          if (p === '*') { pi++; ri++; continue; }
-          if (p !== r) break;
-          pi++; ri++;
-        }
-        if (pi >= parts.length - 1) return true;
+        const re = globToRegex(pat);
+        if (re.test(rel)) return true;
       }
       return false;
     }
@@ -263,7 +286,7 @@ function scanRepo(repo) {
           if (!SKIP_DIRS.has(entry.name)) {
             walk(full, rel);
           }
-        } else if (entry.name.endsWith('.md') && !SKIP_FILES.has(entry.name)) {
+        } else if (entry.name.endsWith('.md') && !SKIP_FILES.has(entry.name) && !excludeFiles.includes(entry.name)) {
           if (matches(rel)) addCourse(rel, full);
         }
       }
@@ -272,7 +295,7 @@ function scanRepo(repo) {
   }
 
   if (repo.type === 'glob') {
-    walkGlob(repoDir, repo.patterns);
+    walkGlob(repoDir, repo.patterns, repo.exclude_files);
   } else if (repo.type === 'subdir') {
     // BME: nested W*/notes/README.md structure
     function findWeekDirs(dir, prefix = '') {
