@@ -7,7 +7,7 @@ import { TopBar } from './components/TopBar'
 import { BottomNav } from './components/BottomNav'
 import coursesData from './data/courses.json'
 import { loadFollow, loadSaved, toggleFollow, toggleSaved, type Course } from './utils/storage'
-import { seededShuffle, getDailySeed, getWeeklySeed } from './utils/shuffle'
+import { seededShuffle, getDailySeed, getWeeklySeed, getSessionSeed, reshuffleSession } from './utils/shuffle'
 import type { ListMode } from './components/CourseList'
 
 type Screen = 'home' | 'detail' | 'following' | 'saved' | 'search'
@@ -32,7 +32,12 @@ export default function App() {
   const [filterHasEquations, setFilterHasEquations] = useState(false)
   const [filterMinLines, setFilterMinLines] = useState(0)
   const [sortBy, setSortBy] = useState<'newest' | 'lines' | 'title' | 'category' | 'mixed'>('mixed')
-  const [listMode, setListMode] = useState<ListMode>('mixed')
+  const [listMode, setListMode] = useState<ListMode>('shuffle')
+  const [shuffleTick, setShuffleTick] = useState(0)
+  const onReshuffle = () => {
+    reshuffleSession()
+    setShuffleTick(t => t + 1)
+  }
 
   // Following / Saved
   const [followed, setFollowed] = useState<Set<string>>(new Set())
@@ -92,7 +97,10 @@ export default function App() {
 
     // On home screen, ranking tabs control order
     if (screen === 'home' && filterCategory === 'all' && !searchQuery) {
-      if (listMode === 'daily') {
+      if (listMode === 'shuffle') {
+        // Session-random: different order every page load
+        result = seededShuffle(result, getSessionSeed())
+      } else if (listMode === 'daily') {
         result = seededShuffle(result, getDailySeed())
       } else if (listMode === 'weekly') {
         result = seededShuffle(result, getWeeklySeed())
@@ -168,7 +176,7 @@ export default function App() {
     }
 
     return result
-  }, [courses, screen, searchQuery, filterCategory, filterSubcategory, filterHasScholars, filterHasEquations, filterMinLines, sortBy, listMode, followed, saved])
+  }, [courses, screen, searchQuery, filterCategory, filterSubcategory, filterHasScholars, filterHasEquations, filterMinLines, sortBy, listMode, followed, saved, shuffleTick])
 
   // Compute available subcategories for current category
   const subcategoryCounts = useMemo(() => {
@@ -271,6 +279,7 @@ export default function App() {
             screen={screen}
             listMode={listMode}
             onListModeChange={setListMode}
+            onReshuffle={onReshuffle}
           />
         )}
 

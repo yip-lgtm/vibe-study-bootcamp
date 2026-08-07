@@ -2,7 +2,7 @@ import type { FC } from 'react'
 import type { Course } from '../utils/storage'
 import { getCategoryColor } from '../utils/categories'
 
-export type ListMode = 'mixed' | 'daily' | 'weekly'
+export type ListMode = 'mixed' | 'daily' | 'weekly' | 'shuffle'
 
 interface Props {
   courses: Course[]
@@ -15,6 +15,7 @@ interface Props {
   screen: string
   listMode: ListMode
   onListModeChange: (m: ListMode) => void
+  onReshuffle?: () => void
 }
 
 const formatTimeAgo = (_repo: string) => '11m'
@@ -25,13 +26,13 @@ const formatLikes = (lines: number) => Math.floor((lines * 7) % 100) - 30
 
 export const CourseList: FC<Props> = ({
   courses, followed, saved, onCourseClick, onFollow, onSave,
-  totalCount, screen, listMode, onListModeChange,
+  totalCount, screen, listMode, onListModeChange, onReshuffle,
 }) => {
   // Only show ranking tabs on home screen
   const showRankingTabs = screen === 'home'
 
   const tabs: { id: ListMode; label: string }[] = [
-    { id: 'mixed', label: '即時熱門' },
+    { id: 'shuffle', label: '🎲 隨機' },
     { id: 'daily', label: '今日熱門' },
     { id: 'weekly', label: '本週精選' },
   ]
@@ -41,19 +42,30 @@ export const CourseList: FC<Props> = ({
       {/* Tabs row */}
       <div className="sticky top-0 bg-black z-10 flex border-b border-divider">
         {showRankingTabs ? (
-          tabs.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => onListModeChange(t.id)}
-              className={`flex-1 text-center py-2 text-sm tap-active ${
-                listMode === t.id
-                  ? 'border-b-2 border-accent text-accent'
-                  : 'text-text-faint'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))
+          <>
+            {tabs.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => onListModeChange(t.id)}
+                className={`flex-1 text-center py-2 text-sm tap-active ${
+                  listMode === t.id
+                    ? 'border-b-2 border-accent text-accent'
+                    : 'text-text-faint'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+            {listMode === 'shuffle' && (
+              <button
+                onClick={() => onReshuffle?.()}
+                title="重新洗牌 Reshuffle"
+                className="px-3 text-accent text-lg tap-active"
+              >
+                🔀
+              </button>
+            )}
+          </>
         ) : (
           <>
             <div className="flex-1 text-center py-2 text-sm text-text-faint">
@@ -73,6 +85,7 @@ export const CourseList: FC<Props> = ({
         {screen === 'search' && ' · filtered'}
         {showRankingTabs && listMode === 'daily' && ' · 今日洗牌'}
         {showRankingTabs && listMode === 'weekly' && ' · 本週洗牌'}
+        {showRankingTabs && listMode === 'shuffle' && ' · 隨機洗牌'}
         {showRankingTabs && listMode === 'mixed' && ' · 混合穿插'}
       </div>
 

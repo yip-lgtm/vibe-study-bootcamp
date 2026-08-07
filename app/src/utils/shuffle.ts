@@ -34,3 +34,16 @@ export function getWeeklySeed(): number {
   d.setDate(d.getDate() + diff)
   return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()
 }
+
+/** Per-session random seed — different every page load, stable within session */
+let _sessionSeed: number | null = null
+export function getSessionSeed(): number {
+  if (_sessionSeed === null) {
+    _sessionSeed = Math.floor(Math.random() * 0x7fffffff)
+  }
+  return _sessionSeed
+}
+export function reshuffleSession(): number {
+  _sessionSeed = Math.floor(Math.random() * 0x7fffffff)
+  return _sessionSeed
+}
