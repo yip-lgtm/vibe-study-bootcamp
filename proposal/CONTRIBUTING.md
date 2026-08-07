@@ -100,7 +100,7 @@ python3 _agents/professor_supervisor/review.py --all
 ## 📬 Contact
 
 - **Issues:** [GitHub Issues](https://github.com/yip-lgtm/vibe-study-bootcamp/issues)
-- **Email:** yipsaba@polyu-msc.ai
+
 
 ---
 
