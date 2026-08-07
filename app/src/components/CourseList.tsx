@@ -1,5 +1,6 @@
 import type { FC } from 'react'
 import type { Course } from '../utils/storage'
+import { getCategoryColor } from '../utils/categories'
 
 export type ListMode = 'mixed' | 'daily' | 'weekly'
 
@@ -85,7 +86,7 @@ export const CourseList: FC<Props> = ({
         courses.map((c) => {
           const comments = formatComments(c.lines)
           const likes = formatLikes(c.lines)
-          const catColor = CATEGORY_COLORS[c.category] || 'bg-pill-bg text-text-dim'
+          const catColor = getCategoryColor(c.category)
           const isFollowed = followed.has(c.id)
           const isSaved = saved.has(c.id)
 
