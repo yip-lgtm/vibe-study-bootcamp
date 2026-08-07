@@ -1,4 +1,5 @@
 import type { FC } from 'react'
+import { getCategories, getTotalCount, getBootcampCount } from '../utils/categories'
 
 interface Props {
   onClose: () => void
@@ -15,15 +16,6 @@ const NAV = [
   { icon: '🏠', label: '全部 All', screen: 'home' as const },
 ]
 
-const CATS = [
-  { icon: '⚙️', label: 'Engineering', value: 'Engineering' },
-  { icon: '⚛️', label: 'Physics', value: 'Physics' },
-  { icon: '📚', label: 'History', value: 'History' },
-  { icon: '🧠', label: 'Psychology', value: 'Psychology' },
-  { icon: '🤖', label: 'Mech-Eng', value: 'Mech-Eng' },
-  { icon: '🧬', label: 'BME', value: 'BME' },
-]
-
 export const Sidebar: FC<Props> = ({
   onClose,
   onNavigate,
@@ -31,13 +23,18 @@ export const Sidebar: FC<Props> = ({
   currentScreen,
   currentCategory,
 }) => {
+  const categories = getCategories()
+  const total = getTotalCount()
+  const bootcamps = getBootcampCount()
   return (
     <div className="h-full bg-black flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-divider">
         <div className="text-3xl">📚</div>
         <div className="font-bold text-accent text-lg mt-2">修學旅行</div>
-        <div className="text-text-dim text-xs mt-1">Self-Study Hub · 6 bootcamps · 519 courses</div>
+        <div className="text-text-dim text-xs mt-1">
+          Self-Study Hub · {bootcamps} bootcamps · {total} courses
+        </div>
       </div>
 
       {/* Main nav */}
@@ -64,20 +61,21 @@ export const Sidebar: FC<Props> = ({
         <div className="px-5 py-3 mt-4">
           <div className="text-text-faint text-xs font-bold uppercase tracking-wider">Bootcamps</div>
         </div>
-        {CATS.map((item) => {
-          const isActive = currentCategory === item.value && currentScreen === 'home'
+        {categories.map((cat) => {
+          const isActive = currentCategory === cat.value && currentScreen === 'home'
           return (
             <button
-              key={item.label}
-              onClick={() => onSelectCategory(item.value)}
+              key={cat.value}
+              onClick={() => onSelectCategory(cat.value)}
               className={`w-full flex items-center gap-3 px-5 py-2.5 text-left tap-active ${
                 isActive ? 'bg-pill-bg' : ''
               }`}
             >
-              <span className="text-base">{item.icon}</span>
-              <span className={`text-sm ${isActive ? 'text-accent' : 'text-text'}`}>
-                {item.label}
+              <span className="text-base">{cat.icon}</span>
+              <span className={`text-sm flex-1 ${isActive ? 'text-accent' : 'text-text'}`}>
+                {cat.label}
               </span>
+              <span className="text-xs text-text-faint">{cat.count}</span>
             </button>
           )
         })}

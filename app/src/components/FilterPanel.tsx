@@ -1,4 +1,5 @@
 import type { FC } from 'react'
+import { getCategories } from '../utils/categories'
 
 interface Props {
   onClose: () => void
@@ -18,21 +19,12 @@ interface Props {
   counts: Record<string, number>
 }
 
-const CATEGORIES = [
-  { value: 'all', label: '全部 All' },
-  { value: 'Engineering', label: '⚙️ Engineering' },
-  { value: 'Physics', label: '⚛️ Physics' },
-  { value: 'History', label: '📚 History' },
-  { value: 'Psychology', label: '🧠 Psychology' },
-  { value: 'Mech-Eng', label: '🤖 Mech-Eng' },
-  { value: 'BME', label: '🧬 BME' },
-]
-
 export const FilterPanel: FC<Props> = ({
   onClose, category, setCategory, subcategory, setSubcategory, subcategoryCounts,
   hasScholars, setHasScholars,
   hasEquations, setHasEquations, minLines, setMinLines, sortBy, setSortBy, counts,
 }) => {
+  const categories = getCategories()
   // Show subcategory selector when BME is selected (or any category with subs)
   const showSubcategory = category !== 'all' && Object.keys(subcategoryCounts).length > 1
   const sortedSubs = Object.keys(subcategoryCounts)
@@ -76,7 +68,7 @@ export const FilterPanel: FC<Props> = ({
         <div>
           <div className="text-text-faint text-xs font-bold mb-2 uppercase">類別 Category</div>
           <div className="space-y-1">
-            {CATEGORIES.map(c => (
+            {[{ value: 'all', label: '全部 All', icon: '🏠' }, ...categories.map(c => ({ value: c.value, label: `${c.icon} ${c.label}`, icon: c.icon }))].map(c => (
               <button
                 key={c.value}
                 onClick={() => setCategory(c.value)}

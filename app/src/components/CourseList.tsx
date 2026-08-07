@@ -16,15 +16,6 @@ interface Props {
   onListModeChange: (m: ListMode) => void
 }
 
-const CATEGORY_COLORS: Record<string, string> = {
-  Engineering: 'bg-blue-900/40 text-blue-300',
-  Physics: 'bg-purple-900/40 text-purple-300',
-  History: 'bg-amber-900/40 text-amber-300',
-  Psychology: 'bg-pink-900/40 text-pink-300',
-  'Mech-Eng': 'bg-cyan-900/40 text-cyan-300',
-  BME: 'bg-emerald-900/40 text-emerald-300',
-}
-
 const formatTimeAgo = (_repo: string) => '11m'
 
 const formatComments = (lines: number) => Math.floor((lines * 13) % 999) + 10
