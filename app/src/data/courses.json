@@ -9,7 +9,7 @@
     "BME": 118,
     "Digital Economics": 32
   },
-  "last_updated": "2026-08-13T07:14:36.395Z",
+  "last_updated": "2026-08-13T12:49:19.405Z",
   "courses": [
     {
       "id": "HKU-BME-Bootcamp-OpenClaw/01_Phase1_LifeSciences-W01_Intro_Chemistry_BMED1207-quiz-README",
@@ -9022,40 +9022,20 @@
     },
     {
       "id": "mech-Eng-Bootcamp/mae-bootcamp-courses-COURSE_INDEX",
-      "title": "CUHK MAE Course Index — Deep Study Format",
+      "title": "CUHK MAE — Course Index (64 Courses)",
       "repo": "mech-Eng-Bootcamp",
       "category": "Mech-Eng",
       "path": "mae-bootcamp/courses/COURSE_INDEX.md",
       "url": "https://github.com/yip-lgtm/mech-Eng-Bootcamp/blob/main/mae-bootcamp/courses/COURSE_INDEX.md",
-      "lines": 1055,
+      "lines": 162,
       "models": [],
-      "disagreements": [
-        "DG-1",
-        "DG-2",
-        "DG-3"
-      ],
-      "scholars": [
-        "Holland",
-        "Gell-Mann",
-        "Kahn",
-        "A. B.",
-        "B. S.",
-        "S. H.",
-        "With Cowan's",
-        "Spence",
-        "J. H.",
-        "G. E.",
-        "Following Newell",
-        "Simon",
-        "Bloom",
-        "Ortega y Gasset",
-        "Florida"
-      ],
-      "equations": 195,
-      "mermaid": 5,
-      "chinese_chars": 1313,
+      "disagreements": [],
+      "scholars": [],
+      "equations": 0,
+      "mermaid": 0,
+      "chinese_chars": 42,
       "subcategory": "courses",
-      "course_code": "MAE 2026",
+      "course_code": "ENGG1110",
       "week": ""
     },
     {
