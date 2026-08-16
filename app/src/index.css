@@ -1,14 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #000000;
-  --color-card: #0a0a0a;
-  --color-accent: #FFB800;
-  --color-text: #e5e5e5;
-  --color-text-dim: #888888;
-  --color-text-faint: #666666;   /* 新增 */
-  --color-pill-bg: #1a1a1a;      /* 新增 */
-  --color-divider: #1a1a1a;
+  /* Book of Elon inspired palette */
+  --color-bg: #05070a;
+  --color-surface: #0c1018;
+  --color-card: #111827;
+  --color-border: #1e293b;
+  --color-border-light: #334155;
+  --color-accent: #3b82f6;
+  --color-accent-glow: rgba(59, 130, 246, 0.15);
+  --color-cyan: #06b6d4;
+  --color-cyan-glow: rgba(6, 182, 212, 0.12);
+  --color-white: #f1f5f9;
+  --color-text: #cbd5e1;
+  --color-text-sec: #94a3b8;
+  --color-text-dim: #475569;
+  --color-text-faint: #334155;
+  --color-pill-bg: #1a1a1a;
+  --color-divider: #1e293b;
+  --font-display: 'Space Grotesk', 'Noto Sans TC', sans-serif;
+  --font-body: 'Inter', 'Noto Sans TC', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 * {
@@ -20,24 +33,23 @@ html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
-  background: #000;
-  color: #e5e5e5;
-  font-family: -apple-system, BlinkMacSystemFont, "PingFang HK", "Microsoft JhengHei", sans-serif;
-  overscroll-behavior: none;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
+  scroll-behavior: smooth;
 }
 
-body {
-  font-size: 14px;
-  line-height: 1.5;
-}
+body { font-size: 14px; }
 
-/* Custom scrollbar - hidden but scrollable */
-::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-}
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-border-light); }
 
-/* Slide-in animation */
+/* Slide-in animations */
 @keyframes slideInLeft {
   from { transform: translateX(-100%); }
   to { transform: translateX(0); }
@@ -49,16 +61,112 @@ body {
 .slide-in-left { animation: slideInLeft 0.25s ease-out; }
 .slide-in-right { animation: slideInRight 0.25s ease-out; }
 
+/* Fade-up for scroll-into-view */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up { opacity: 0; animation: fadeUp 0.6s ease-out forwards; }
+.fade-up.visible { opacity: 1; }
+
+/* Stagger delays */
+.fade-up.delay-1 { animation-delay: 0.1s; }
+.fade-up.delay-2 { animation-delay: 0.2s; }
+.fade-up.delay-3 { animation-delay: 0.3s; }
+
 /* Tap feedback */
-.tap-active:active {
-  background: rgba(255, 184, 0, 0.08);
+.tap-active { transition: all 0.2s; }
+.tap-active:active { background: var(--color-accent-glow); transform: scale(0.98); }
+
+/* Hero glow gradient */
+.glow {
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-cyan) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-/* Yellow flash text (recent highlight) */
+/* Card with top gradient on hover (Book of Elon style) */
+.elegant-card {
+  position: relative;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+.elegant-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-accent), var(--color-cyan));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s;
+}
+.elegant-card:hover {
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.1);
+}
+.elegant-card:hover::before { transform: scaleX(1); }
+
+/* Section title */
+.section-title {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--color-white);
+  letter-spacing: -0.02em;
+  margin-bottom: 1.5rem;
+}
+
+/* Mono labels */
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-cyan);
+}
+
+/* Accent button (Book of Elon CTA) */
+.cta-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 10px;
+  background: var(--color-accent);
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: all 0.3s;
+  box-shadow: 0 4px 24px var(--color-accent-glow);
+}
+.cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px var(--color-accent-glow);
+}
+
+/* Yellow flash for recent highlights (preserve existing feature) */
 .flash-yellow {
   animation: flashYellow 2s ease-out;
 }
 @keyframes flashYellow {
   0%, 100% { color: #FFB800; }
-  50% { color: #e5e5e5; }
+  50% { color: var(--color-text); }
+}
+
+/* Sticky nav with blur (Book of Elon style) */
+.sticky-blur {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(5, 7, 10, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border);
 }
