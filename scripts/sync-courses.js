@@ -93,7 +93,7 @@ const REPOS = [
     category: 'Robotics & Structural Eng',
     branch: 'main',
     type: 'glob',
-    patterns: ['subjects/*.md', 'MW01-Technical-Guidelines/**/*.md'],
+    patterns: ['projects/**/*.md'],
     exclude_files: ['README.md'],
   },
 ];
