@@ -94,14 +94,6 @@ const REPOS = [
     branch: 'main',
     type: 'projects',  // Each subdir under projects/ = 1 course
   },
-  {
-    name: 'x-algorithm',
-    org: 'xai-org',
-    url: 'https://github.com/xai-org/x-algorithm.git',
-    category: 'X Algorithm',
-    branch: 'main',
-    type: 'services',  // Each top-level subdir = 1 service/component
-  },
 ];
 
 const TMP_DIR = '/tmp/bootcamp-sync';
