@@ -420,6 +420,61 @@ function scanRepo(repo) {
         });
       }
     }
+    // Also include Technical Guidelines as a course
+    const techDir = path.join(repoDir, 'MW01-Technical-Guidelines');
+    if (fs.existsSync(techDir)) {
+      const textFile = path.join(techDir, 'MWTGe_English_text.txt');
+      if (fs.existsSync(textFile)) {
+        const content = fs.readFileSync(textFile, 'utf-8');
+        const totalLines = content.split('\n').length;
+        const rel = 'MW01-Technical-Guidelines/MWTGe_English_text.txt';
+        if (!seenPaths.has(rel)) {
+          seenPaths.add(rel);
+          const meta = extractCourseMeta(rel, content);
+          courses.push({
+            id: `${repo.name}/MW01-Technical-Guidelines`,
+            title: 'MW01 Technical Guidelines (English)',
+            repo: repo.name, category: repo.category,
+            path: rel,
+            url: `https://github.com/${repo.org}/${repo.name}/blob/${repo.branch}/${rel}`,
+            lines: totalLines, models: meta.models, disagreements: meta.disagreements,
+            scholars: meta.scholars, equations: meta.equations, mermaid: meta.mermaid,
+            chinese_chars: meta.chinese_chars, subcategory: 'Technical Guidelines',
+            course_code: meta.courseCode, week: meta.week,
+          });
+        }
+      }
+    }
+    // Bundle subjects/ as a single reference course
+    const subjectsDir = path.join(repoDir, 'subjects');
+    if (fs.existsSync(subjectsDir)) {
+      const subjFiles = fs.readdirSync(subjectsDir).filter(f => f.endsWith('.md'));
+      if (subjFiles.length > 0) {
+        let combined = '';
+        let totalLines = 0;
+        for (const f of subjFiles) {
+          const c = fs.readFileSync(path.join(subjectsDir, f), 'utf-8');
+          combined += `# ${f.replace(/^\d+_/, '').replace('.md', '').replace(/_/g, ' ')}\n\n${c}\n\n`;
+          totalLines += c.split('\n').length;
+        }
+        const rel = 'subjects/';
+        if (!seenPaths.has(rel)) {
+          seenPaths.add(rel);
+          const meta = extractCourseMeta(rel, combined);
+          courses.push({
+            id: `${repo.name}/subjects-bundle`,
+            title: 'Robotics & Engineering Subjects (13 courses)',
+            repo: repo.name, category: repo.category,
+            path: rel,
+            url: `https://github.com/${repo.org}/${repo.name}/tree/${repo.branch}/subjects`,
+            lines: totalLines, models: meta.models, disagreements: meta.disagreements,
+            scholars: meta.scholars, equations: meta.equations, mermaid: meta.mermaid,
+            chinese_chars: meta.chinese_chars, subcategory: 'Subjects Reference',
+            course_code: meta.courseCode, week: meta.week,
+          });
+        }
+      }
+    }
   }
 
   console.log(`  -> ${courses.length} courses`);

@@ -1,5 +1,5 @@
 {
-  "total": 879,
+  "total": 881,
   "by_category": {
     "Civil Engineering": 104,
     "Physics": 141,
@@ -8,9 +8,9 @@
     "Psychology": 130,
     "BME": 118,
     "Digital Economics": 32,
-    "Robotics & Structural Eng": 60
+    "Robotics & Structural Eng": 62
   },
-  "last_updated": "2026-08-17T04:45:52.725Z",
+  "last_updated": "2026-08-17T04:46:39.859Z",
   "courses": [
     {
       "id": "HKU-BME-Bootcamp-OpenClaw/01_Phase1_LifeSciences-W01_Intro_Chemistry_BMED1207-quiz-README",
@@ -20639,6 +20639,42 @@
       "subcategory": "projects",
       "course_code": "",
       "week": "W1"
+    },
+    {
+      "id": "MW01-RSE-Bootcamp/subjects-bundle",
+      "title": "Robotics & Engineering Subjects (13 courses)",
+      "repo": "MW01-RSE-Bootcamp",
+      "category": "Robotics & Structural Eng",
+      "path": "subjects/",
+      "url": "https://github.com/yip-lgtm/MW01-RSE-Bootcamp/tree/main/subjects",
+      "lines": 329,
+      "models": [],
+      "disagreements": [],
+      "scholars": [],
+      "equations": 0,
+      "mermaid": 0,
+      "chinese_chars": 354,
+      "subcategory": "Subjects Reference",
+      "course_code": "",
+      "week": "W1"
+    },
+    {
+      "id": "MW01-RSE-Bootcamp/MW01-Technical-Guidelines",
+      "title": "MW01 Technical Guidelines (English)",
+      "repo": "MW01-RSE-Bootcamp",
+      "category": "Robotics & Structural Eng",
+      "path": "MW01-Technical-Guidelines/MWTGe_English_text.txt",
+      "url": "https://github.com/yip-lgtm/MW01-RSE-Bootcamp/blob/main/MW01-Technical-Guidelines/MWTGe_English_text.txt",
+      "lines": 16554,
+      "models": [],
+      "disagreements": [],
+      "scholars": [],
+      "equations": 0,
+      "mermaid": 0,
+      "chinese_chars": 19780,
+      "subcategory": "Technical Guidelines",
+      "course_code": "",
+      "week": "W01"
     }
   ]
 }
