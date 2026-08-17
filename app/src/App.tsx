@@ -5,6 +5,7 @@ import { CourseList } from './components/CourseList'
 import { CourseDetail } from './components/CourseDetail'
 import { TopBar } from './components/TopBar'
 import { BottomNav } from './components/BottomNav'
+import { InstallPrompt } from './components/InstallPrompt'
 import coursesData from './data/courses.json'
 import { loadFollow, loadSaved, toggleFollow, toggleSaved, type Course } from './utils/storage'
 import { seededShuffle, getDailySeed, getWeeklySeed, getSessionSeed, reshuffleSession } from './utils/shuffle'
@@ -293,6 +294,8 @@ export default function App() {
           followingCount={followed.size}
           savedCount={saved.size}
         />
+
+        <InstallPrompt />
       </div>
 
       {sidePanel === 'left' && (
