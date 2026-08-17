@@ -92,9 +92,7 @@ const REPOS = [
     url: 'https://github.com/yip-lgtm/MW01-RSE-Bootcamp.git',
     category: 'Robotics & Structural Eng',
     branch: 'main',
-    type: 'glob',
-    patterns: ['projects/**/*.md'],
-    exclude_files: ['README.md'],
+    type: 'projects',  // Each subdir under projects/ = 1 course
   },
 ];
 
@@ -359,7 +357,7 @@ function scanRepo(repo) {
         if (entry.name === '.git') continue;
         const full = path.join(dir, entry.name);
         const rel = relPath ? `${relPath}/${entry.name}` : entry.name;
-        
+
         if (entry.isDirectory()) {
           if (!SKIP_DIRS.has(entry.name)) {
             walk(full, rel);
@@ -370,6 +368,58 @@ function scanRepo(repo) {
       }
     }
     walk(repoDir);
+  } else if (repo.type === 'projects') {
+    // Each subdir under projects/ = 1 course (MW01-RSE-Bootcamp)
+    // Include even empty project dirs as placeholder courses
+    const projectsDir = path.join(repoDir, 'projects');
+    if (fs.existsSync(projectsDir)) {
+      const entries = fs.readdirSync(projectsDir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue;
+        const projectPath = path.join(projectsDir, entry.name);
+        // Recursively find all .md files inside
+        const mdFiles = [];
+        function findMd(d) {
+          const es = fs.readdirSync(d, { withFileTypes: true });
+          for (const e of es) {
+            if (e.isDirectory()) {
+              if (!SKIP_DIRS.has(e.name)) findMd(path.join(d, e.name));
+            } else if (e.name.endsWith('.md') && !SKIP_FILES.has(e.name) && e.name !== 'README.md') {
+              mdFiles.push(path.join(d, e.name));
+            }
+          }
+        }
+        findMd(projectPath);
+        // Combine all .md content (may be empty)
+        let combined = '';
+        let totalLines = 0;
+        for (const f of mdFiles) {
+          try {
+            const c = fs.readFileSync(f, 'utf-8');
+            combined += c + '\n\n';
+            totalLines += c.split('\n').length;
+          } catch (e) {}
+        }
+        // Title from first H1 or dir name
+        let title = entry.name.replace(/[_-]+/g, ' ');
+        const titleMatch = combined.match(/^#\s+(.+)/m);
+        if (titleMatch) title = titleMatch[1].trim();
+        const rel = `projects/${entry.name}`;
+        if (seenPaths.has(rel)) continue;
+        seenPaths.add(rel);
+        const meta = extractCourseMeta(rel, combined);
+        const id = `${repo.name}/${entry.name}`;
+        courses.push({
+          id, title, repo: repo.name, category: repo.category,
+          path: rel,
+          url: `https://github.com/${repo.org}/${repo.name}/blob/${repo.branch}/${rel}`,
+          lines: totalLines, models: meta.models, disagreements: meta.disagreements,
+          scholars: meta.scholars, equations: meta.equations, mermaid: meta.mermaid,
+          chinese_chars: meta.chinese_chars, subcategory: meta.subcategory || repo.category,
+          course_code: meta.courseCode, week: meta.week,
+        });
+      }
+    }
   }
 
   console.log(`  -> ${courses.length} courses`);
