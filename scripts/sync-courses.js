@@ -86,6 +86,16 @@ const REPOS = [
       'completion.md',
     ],
   },
+  {
+    name: 'MW01-RSE-Bootcamp',
+    org: 'yip-lgtm',
+    url: 'https://github.com/yip-lgtm/MW01-RSE-Bootcamp.git',
+    category: 'Robotics & Structural Eng',
+    branch: 'main',
+    type: 'glob',
+    patterns: ['subjects/*.md', 'MW01-Technical-Guidelines/**/*.md'],
+    exclude_files: ['README.md'],
+  },
 ];
 
 const TMP_DIR = '/tmp/bootcamp-sync';

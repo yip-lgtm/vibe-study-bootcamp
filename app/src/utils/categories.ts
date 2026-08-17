@@ -14,7 +14,7 @@ const CATEGORY_META: Record<string, { icon: string; label: string; color: string
   'Physics':                    { icon: '⚛️',  label: 'Physics',                    color: 'bg-purple-900/40 text-purple-300' },
   'History':                    { icon: '📚',  label: 'History',                    color: 'bg-amber-900/40 text-amber-300' },
   'Psychology':                 { icon: '🧠',  label: 'Psychology',                 color: 'bg-pink-900/40 text-pink-300' },
-  'Mech-Eng':                   { icon: '⚙️', label: 'Mech-Eng',                   color: 'bg-cyan-900/40 text-cyan-300' },
+  'Mech-Eng':                   { icon: '⚙️',  label: 'Mech-Eng',                   color: 'bg-cyan-900/40 text-cyan-300' },
   'BME':                        { icon: '🧬',  label: 'BME',                        color: 'bg-emerald-900/40 text-emerald-300' },
   'Robotics & Structural Eng':  { icon: '🤖', label: 'Robotics & Structural Eng',  color: 'bg-indigo-900/40 text-indigo-300' },
   'Digital Economics':          { icon: '💰',  label: 'Digital Economics',          color: 'bg-yellow-900/40 text-yellow-300' },
