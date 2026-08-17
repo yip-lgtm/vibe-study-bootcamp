@@ -18,6 +18,7 @@ const CATEGORY_META: Record<string, { icon: string; label: string; color: string
   'BME':                        { icon: '🧬',  label: 'BME',                        color: 'bg-emerald-900/40 text-emerald-300' },
   'Robotics & Structural Eng':  { icon: '🤖', label: 'Robotics & Structural Eng',  color: 'bg-indigo-900/40 text-indigo-300' },
   'Digital Economics':          { icon: '💰',  label: 'Digital Economics',          color: 'bg-yellow-900/40 text-yellow-300' },
+  'X Algorithm':                { icon: '𝕏',  label: 'X Algorithm',                color: 'bg-zinc-900/40 text-zinc-200' },
   'Engineering':                { icon: '🛠️',  label: 'Engineering',                color: 'bg-blue-900/40 text-blue-300' },
 }
 

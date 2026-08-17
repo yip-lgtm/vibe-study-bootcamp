@@ -94,6 +94,14 @@ const REPOS = [
     branch: 'main',
     type: 'projects',  // Each subdir under projects/ = 1 course
   },
+  {
+    name: 'x-algorithm',
+    org: 'xai-org',
+    url: 'https://github.com/xai-org/x-algorithm.git',
+    category: 'X Algorithm',
+    branch: 'main',
+    type: 'services',  // Each top-level subdir = 1 service/component
+  },
 ];
 
 const TMP_DIR = '/tmp/bootcamp-sync';
@@ -473,6 +481,87 @@ function scanRepo(repo) {
             course_code: meta.courseCode, week: meta.week,
           });
         }
+      }
+    }
+  } else if (repo.type === 'services') {
+    // X algorithm: each top-level subdir = 1 service/component
+    const subdirs = fs.readdirSync(repoDir, { withFileTypes: true });
+    for (const entry of subdirs) {
+      if (!entry.isDirectory()) continue;
+      if (entry.name === '.git' || entry.name === 'docs' || entry.name === 'under-the-hood') continue;
+      if (SKIP_DIRS.has(entry.name)) continue;
+      const servicePath = path.join(repoDir, entry.name);
+      // Recursively find all relevant files
+      const mdFiles = [];
+      const allFiles = [];
+      function walk(d) {
+        const es = fs.readdirSync(d, { withFileTypes: true });
+        for (const e of es) {
+          if (e.isDirectory()) {
+            if (!SKIP_DIRS.has(e.name)) walk(path.join(d, e.name));
+          } else if (!e.name.startsWith('.')) {
+            allFiles.push(e.name);
+            if (e.name.endsWith('.md')) mdFiles.push(path.join(d, e.name));
+          }
+        }
+      }
+      walk(servicePath);
+      // Combine all .md content
+      let combined = '';
+      let totalLines = 0;
+      for (const f of mdFiles) {
+        try {
+          const c = fs.readFileSync(f, 'utf-8');
+          combined += c + '\n\n';
+          totalLines += c.split('\n').length;
+        } catch (e) {}
+      }
+      // Title from first H1 or dir name
+      let title = entry.name.replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      const titleMatch = combined.match(/^#\s+(.+)/m);
+      if (titleMatch) title = titleMatch[1].trim();
+      const rel = entry.name;
+      if (seenPaths.has(rel)) continue;
+      seenPaths.add(rel);
+      const meta = extractCourseMeta(rel, combined);
+      // Determine subcategory based on dir name
+      const lowerName = entry.name.toLowerCase();
+      let subcategory = 'Other';
+      if (['phoenix', 'home-mixer', 'phoenix-rankall', 'phoenix-rankall-strato', 'vm-ranker'].includes(lowerName)) subcategory = 'Ranking';
+      else if (['candidate-pipeline', 'thunder', 'simclusters'].includes(lowerName)) subcategory = 'Retrieval';
+      else if (['agatha', 'bdsm', 'user-cred-v2', 'botmaker', 'botmaker-rules', 'scarecrow', 'grox'].includes(lowerName)) subcategory = 'Scoring';
+      else if (['visibility-filtering', 'visibility-filtering-client', 'abuse-enforcement-service', 'adult-content', 'pnsfwmedia', 'safety-label-user-agg'].includes(lowerName)) subcategory = 'Safety';
+      else if (['media-model-proxy', 'clip'].includes(lowerName)) subcategory = 'Media';
+      const id = `${repo.name}/${entry.name}`;
+      courses.push({
+        id, title, repo: repo.name, category: repo.category,
+        path: rel,
+        url: `https://github.com/${repo.org}/${repo.name}/tree/${repo.branch}/${rel}`,
+        lines: totalLines, models: meta.models, disagreements: meta.disagreements,
+        scholars: meta.scholars, equations: meta.equations, mermaid: meta.mermaid,
+        chinese_chars: meta.chinese_chars, subcategory,
+        course_code: meta.courseCode, week: meta.week,
+        file_count: allFiles.length,
+      });
+    }
+    // Bundle docs as overview course
+    const docsFile = path.join(repoDir, 'README.md');
+    if (fs.existsSync(docsFile)) {
+      const c = fs.readFileSync(docsFile, 'utf-8');
+      const totalLines = c.split('\n').length;
+      if (!seenPaths.has('OVERVIEW')) {
+        seenPaths.add('OVERVIEW');
+        courses.push({
+          id: `${repo.name}/overview`,
+          title: 'X For You Feed — Architecture Overview',
+          repo: repo.name, category: repo.category,
+          path: 'README.md',
+          url: `https://github.com/${repo.org}/${repo.name}/blob/${repo.branch}/README.md`,
+          lines: totalLines, models: [], disagreements: [], scholars: [],
+          equations: 0, mermaid: (c.match(/```mermaid[\s\S]*?```/g) || []).length,
+          chinese_chars: 0, subcategory: 'Overview',
+          course_code: '', week: '',
+        });
       }
     }
   }
