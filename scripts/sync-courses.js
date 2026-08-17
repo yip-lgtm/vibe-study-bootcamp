@@ -90,7 +90,7 @@ const REPOS = [
     name: 'MW01-RSE-Bootcamp',
     org: 'yip-lgtm',
     url: 'https://github.com/yip-lgtm/MW01-RSE-Bootcamp.git',
-    category: 'Robotics & Structural Eng',
+    category: 'MW01-RSE-Bootcamp',
     branch: 'main',
     type: 'projects',  // Each subdir under projects/ = 1 course
   },
