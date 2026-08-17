@@ -9,7 +9,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icon.svg', 'icon-192.png', 'icon-512.png', 'favicon.ico'],
+      includeAssets: ['icon.svg', 'pwa-192.png', 'icon-512.png', 'favicon.ico'],
       manifest: {
         name: '修學旅行 — Study Tour PWA',
         short_name: '修學旅行',
@@ -24,7 +24,7 @@ export default defineConfig({
         categories: ['education', 'books', 'productivity'],
         icons: [
           { src: './icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' },
-          { src: './icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+          { src: './pwa-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
           { src: './icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
         shortcuts: [
