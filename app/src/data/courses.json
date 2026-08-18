@@ -10,7 +10,7 @@
     "Digital Economics": 32,
     "MW01-RSE-Bootcamp": 62
   },
-  "last_updated": "2026-08-18T00:42:52.133Z",
+  "last_updated": "2026-08-18T06:27:36.203Z",
   "courses": [
     {
       "id": "HKU-BME-Bootcamp-OpenClaw/01_Phase1_LifeSciences-W01_Intro_Chemistry_BMED1207-quiz-README",
@@ -12653,6 +12653,24 @@
       "week": "W1"
     },
     {
+      "id": "MW01-RSE-Bootcamp/MW1.50_Cooling_Tower",
+      "title": "MW 1.50 完整 RSE 計算報告大綱",
+      "repo": "MW01-RSE-Bootcamp",
+      "category": "MW01-RSE-Bootcamp",
+      "path": "projects/MW1.50_Cooling_Tower",
+      "url": "https://github.com/yip-lgtm/MW01-RSE-Bootcamp/blob/main/projects/MW1.50_Cooling_Tower",
+      "lines": 208,
+      "models": [],
+      "disagreements": [],
+      "scholars": [],
+      "equations": 0,
+      "mermaid": 0,
+      "chinese_chars": 721,
+      "subcategory": "projects",
+      "course_code": "",
+      "week": "W1"
+    },
+    {
       "id": "MW01-RSE-Bootcamp/MW1.6_Protective_Barrier",
       "title": "MW 1.6 RSE Calculation Report",
       "repo": "MW01-RSE-Bootcamp",
@@ -13343,24 +13361,6 @@
       "category": "MW01-RSE-Bootcamp",
       "path": "projects/MW1.49_Cooling_Tower_Support",
       "url": "https://github.com/yip-lgtm/MW01-RSE-Bootcamp/blob/main/projects/MW1.49_Cooling_Tower_Support",
-      "lines": 0,
-      "models": [],
-      "disagreements": [],
-      "scholars": [],
-      "equations": 0,
-      "mermaid": 0,
-      "chinese_chars": 0,
-      "subcategory": "projects",
-      "course_code": "",
-      "week": "W1"
-    },
-    {
-      "id": "MW01-RSE-Bootcamp/MW1.50_Cooling_Tower",
-      "title": "MW1.50 Cooling Tower",
-      "repo": "MW01-RSE-Bootcamp",
-      "category": "MW01-RSE-Bootcamp",
-      "path": "projects/MW1.50_Cooling_Tower",
-      "url": "https://github.com/yip-lgtm/MW01-RSE-Bootcamp/blob/main/projects/MW1.50_Cooling_Tower",
       "lines": 0,
       "models": [],
       "disagreements": [],
