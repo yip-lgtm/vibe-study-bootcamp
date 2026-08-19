@@ -88,7 +88,7 @@ class ProviderConfig:
 # api.minimaxi.com is for pay-as-you-go (Chinese region)
 MINIMAX_TOKEN_PLAN_BASE = "https://api.minimax.io"
 MINIMAX_PAYG_BASE = "https://api.minimaxi.com"
-MINIMAX_MODEL = "MiniMax-M3"  # default model
+MINIMAX_MODEL = "MiniMax-M2.7-HighSpeed"  # default model
 
 # Heuristic: sk-cp- keys are Token Plan (use api.minimax.io)
 # Other keys (e.g. sk-...) are pay-as-you-go (use api.minimaxi.com)
