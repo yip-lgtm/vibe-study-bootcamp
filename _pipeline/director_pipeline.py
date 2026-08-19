@@ -139,6 +139,7 @@ def run_course(course_path: str, stream: bool = False, max_iterations: int = 3) 
     # Write enhanced body back to course file (only for APPROVED courses
     # that actually produced new content). Also check the body differs
     # from the original file (otherwise the LLM was a no-op pass-through).
+    print(f"  [DEBUG] final.decision={final.decision!r}, final.body len={len(final.body)}, REJECT={(final.decision == 'REJECT')}")
     if final.decision == "APPROVED" and final.body:
         try:
             with open(course_path, "r", encoding="utf-8") as f:

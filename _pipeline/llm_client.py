@@ -33,7 +33,8 @@ import logging
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Iterator, Tuple
 
-import httpx
+import urllib.request
+import urllib.error
 
 
 log = logging.getLogger(__name__)
@@ -183,7 +184,7 @@ def complete(
     model: Optional[str] = None,
     max_tokens: int = 2048,
     temperature: float = 0.7,
-    timeout: float = 120.0,
+    timeout: float = 300.0,  # 5 min default (MiniMax thinking models are slower)
     provider: Optional[ProviderConfig] = None,
 ) -> LLMResponse:
     """
@@ -255,12 +256,12 @@ def complete(
 
     t0 = time.time()
     try:
-        with httpx.Client(timeout=timeout) as client:
-            r = client.post(url, headers=headers, json=body)
-            r.raise_for_status()
-            data = r.json()
-    except httpx.HTTPStatusError as e:
-        log.error(f"LLM API error: {e.response.status_code} {e.response.text[:500]}")
+        req = urllib.request.Request(url, data=json.dumps(body).encode(), headers=headers)
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            data = json.loads(response.read())
+    except urllib.error.HTTPError as e:
+        err_body = e.read().decode('utf-8', errors='replace')[:500]
+        log.error(f"LLM API error: {e.code} {err_body}")
         raise
     latency_ms = int((time.time() - t0) * 1000)
 

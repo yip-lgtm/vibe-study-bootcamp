@@ -99,12 +99,31 @@ def _llm_engineer(state: PipelineState, content: str, brief: dict, data: dict, c
             f"Produce the complete course body in Deep Study Format."
         )
 
-    resp = complete(
-        messages=[{"role": "user", "content": user_msg}],
-        system=SYSTEM_PROMPT_ENGINEER,
-        max_tokens=16000,  # larger for body generation
-        temperature=0.3,  # some creativity but mostly factual
-    )
+    # Retry with backoff on transient failures (503, timeout)
+    last_err = None
+    for attempt in range(3):
+        try:
+            resp = complete(
+                messages=[{"role": "user", "content": user_msg}],
+                system=SYSTEM_PROMPT_ENGINEER,
+                max_tokens=12000,  # moderate for body generation
+                temperature=0.3,
+                timeout=300,  # 5 min for long generations (MiniMax thinking model)
+            )
+            break  # success
+        except Exception as e:
+            last_err = e
+            err_str = str(e)[:150]
+            if "503" in err_str or "timed out" in err_str.lower() or "DNS" in err_str or "connection" in err_str.lower():
+                wait = 5 * (attempt + 1)
+                if writer:
+                    writer({"type": "llm_retry", "agent": "engineer", "attempt": attempt+1, "wait_s": wait, "error": err_str})
+                import time as _t
+                _t.sleep(wait)
+                continue
+            raise
+    else:
+        raise last_err
 
     if writer:
         writer({
