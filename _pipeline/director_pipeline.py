@@ -136,13 +136,24 @@ def run_course(course_path: str, stream: bool = False, max_iterations: int = 3) 
 
     final = graph.invoke(initial, config={"writer": writer})
 
-    # Write enhanced body back to course file (only for APPROVED courses)
+    # Write enhanced body back to course file (only for APPROVED courses
+    # that actually produced new content). Also check the body differs
+    # from the original file (otherwise the LLM was a no-op pass-through).
     if final.decision == "APPROVED" and final.body:
         try:
-            with open(course_path, "w", encoding="utf-8") as f:
-                f.write(final.body)
-        except Exception as e:
-            pass  # Don't fail the run if write fails
+            with open(course_path, "r", encoding="utf-8") as f:
+                original_content = f.read()
+        except Exception:
+            original_content = ""
+        if final.body.strip() != original_content.strip():
+            try:
+                with open(course_path, "w", encoding="utf-8") as f:
+                    f.write(final.body)
+                print(f"  ✓ wrote {len(final.body) - len(original_content):+d} chars to {course_path}")
+            except Exception as e:
+                print(f"  ✗ write failed: {e}")
+        else:
+            print(f"  ⚠ body unchanged (LLM pass-through or no-op)")
 
     return final
 

@@ -179,11 +179,17 @@ def engineer_node(state: PipelineState, config: Dict[str, Any]) -> Dict[str, Any
         try:
             body = _llm_engineer(state, content, brief, data, config)
             method = "llm"
+            # Loud-fail: if LLM returned empty or identical to input, surface as error
+            if not body or body.strip() == content.strip():
+                err = "LLM returned empty or identical content (likely API failure)"
+                if writer:
+                    writer({"type": "llm_error", "agent": "engineer", "error": err})
+                return {"errors": [f"[engineer] {err}"]}
         except Exception as e:
             if writer:
                 writer({"type": "llm_error", "agent": "engineer", "error": str(e)[:200]})
-            body = content  # pass through
-            method = "deterministic_fallback"
+            # Don't silently pass through — surface the failure
+            return {"errors": [f"[engineer] LLM call failed: {str(e)[:300]}"]}
     else:
         body = content  # pass through
         method = "deterministic"
