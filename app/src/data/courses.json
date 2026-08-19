@@ -10,7 +10,7 @@
     "Digital Economics": 32,
     "MW01-RSE-Bootcamp": 62
   },
-  "last_updated": "2026-08-19T00:42:59.070Z",
+  "last_updated": "2026-08-19T06:28:33.325Z",
   "courses": [
     {
       "id": "HKU-BME-Bootcamp-OpenClaw/01_Phase1_LifeSciences-W01_Intro_Chemistry_BMED1207-quiz-README",
@@ -10885,24 +10885,25 @@
     },
     {
       "id": "mech-Eng-Bootcamp/mae-bootcamp-courses-major-required-MAEG4040",
-      "title": "MAEG4040 Mechatronic Systems",
+      "title": "MAEG4040 Mechatronic Systems — Deep Study Format",
       "repo": "mech-Eng-Bootcamp",
       "category": "Mech-Eng",
       "path": "mae-bootcamp/courses/major-required/MAEG4040.md",
       "url": "https://github.com/yip-lgtm/mech-Eng-Bootcamp/blob/main/mae-bootcamp/courses/major-required/MAEG4040.md",
-      "lines": 566,
+      "lines": 607,
       "models": [],
       "disagreements": [],
       "scholars": [
-        "Einstein",
-        "Bohr",
-        "Schrödinger",
-        "Dirac",
-        "Feynman"
+        "D. P.",
+        "J.-D.",
+        "R. E.",
+        "J.-M.",
+        "J. C.",
+        "H. E."
       ],
-      "equations": 185,
+      "equations": 356,
       "mermaid": 5,
-      "chinese_chars": 1682,
+      "chinese_chars": 474,
       "subcategory": "major required",
       "course_code": "MAEG4040",
       "week": ""
