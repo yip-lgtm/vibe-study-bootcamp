@@ -61,7 +61,7 @@ class PipelineState:
     current_agent: str = "director"                 # Which agent to run next
     iteration: int = 0                              # Revision iteration count
     max_iterations: int = 3                         # Cap on revisions
-    decision: str = "APPROVED"                      # APPROVED / REVISE / REJECT (from professor)
+    decision: str = ""                              # APPROVED / REVISE / REJECT (from professor) — empty until professor runs
     weak_gates: List[str] = field(default_factory=list)  # Which gates failed (for re-routing)
     errors: List[str] = field(default_factory=list)        # Accumulated errors
 
