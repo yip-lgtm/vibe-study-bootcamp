@@ -10,7 +10,7 @@
     "Digital Economics": 32,
     "MW01-RSE-Bootcamp": 62
   },
-  "last_updated": "2026-08-24T00:44:46.991Z",
+  "last_updated": "2026-08-24T06:38:26.437Z",
   "courses": [
     {
       "id": "HKU-BME-Bootcamp-OpenClaw/01_Phase1_LifeSciences-W01_Intro_Chemistry_BMED1207-quiz-README",
@@ -12624,13 +12624,13 @@
       "category": "MW01-RSE-Bootcamp",
       "path": "projects/MW1.50_Cooling_Tower",
       "url": "https://github.com/yip-lgtm/MW01-RSE-Bootcamp/blob/main/projects/MW1.50_Cooling_Tower",
-      "lines": 617,
+      "lines": 744,
       "models": [],
       "disagreements": [],
       "scholars": [],
       "equations": 0,
       "mermaid": 0,
-      "chinese_chars": 1023,
+      "chinese_chars": 1027,
       "subcategory": "projects",
       "course_code": "",
       "week": "W1"
