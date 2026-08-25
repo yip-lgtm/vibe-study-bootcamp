@@ -31,7 +31,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: app
-        run: npm ci
+        run: npm ci --prefer-offline || npm install
 
       - name: Build
         working-directory: app
