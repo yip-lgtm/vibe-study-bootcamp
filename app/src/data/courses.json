@@ -10,7 +10,7 @@
     "Digital Economics": 32,
     "MW01-RSE-Bootcamp": 62
   },
-  "last_updated": "2026-08-27T05:55:40.951Z",
+  "last_updated": "2026-08-27T17:10:13.516Z",
   "courses": [
     {
       "id": "HKU-BME-Bootcamp-OpenClaw/01_Phase1_LifeSciences-W01_Intro_Chemistry_BMED1207-quiz-README",
@@ -12727,18 +12727,18 @@
     },
     {
       "id": "MW01-RSE-Bootcamp/MW1.6_Protective_Barrier",
-      "title": "MW 1.6 RSE Calculation Report",
+      "title": "MW 1.6 (A6) Base plate — PR4 clause",
       "repo": "MW01-RSE-Bootcamp",
       "category": "MW01-RSE-Bootcamp",
       "path": "projects/MW1.6_Protective_Barrier",
       "url": "https://github.com/yip-lgtm/MW01-RSE-Bootcamp/blob/main/projects/MW1.6_Protective_Barrier",
-      "lines": 59,
+      "lines": 48,
       "models": [],
       "disagreements": [],
       "scholars": [],
-      "equations": 8,
+      "equations": 0,
       "mermaid": 0,
-      "chinese_chars": 71,
+      "chinese_chars": 54,
       "subcategory": "projects",
       "course_code": "",
       "week": "W1"
