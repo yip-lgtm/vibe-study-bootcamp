@@ -46,17 +46,19 @@ vibe-study-bootcamp/
 
 ## 🌟 Showcase — AllBootcamp App
 
-**495+ courses** from 6 bootcamps, all 100% APPROVED:
+**881 courses** from 8 bootcamps, all 100% APPROVED:
 
 | Bootcamp | Courses | Status |
 |---|---|---|
-| `civil-bootcamp` (MIT CEE) | 85 | ✅ 100% |
-| `PhysicsSelfStudy` (HKUST) | 18 | ✅ 100% |
-| `HKU-Harvard-History-Self-Study` | 155 | ✅ 100% |
-| `psych-self-study-hku` | 131 | ✅ 100% |
-| `mech-Eng-Bootcamp` (CUHK MAE) | 100 | ✅ 100% |
-| `HKU-BME-Bootcamp-OpenClaw` | 6 | ✅ 100% |
-| **Total** | **495+** | **✅ 100%** |
+| `mech-Eng-Bootcamp` (CUHK MAE) | 150 | ✅ 100% |
+| `HKU-Harvard-History-Self-Study` | 144 | ✅ 100% |
+| `PhysicsSelfStudy` (HKUST) | 141 | ✅ 100% |
+| `psych-self-study-hku` | 130 | ✅ 100% |
+| `HKU-BME-Bootcamp-OpenClaw` | 118 | ✅ 100% |
+| `civil-bootcamp` (MIT CEE) | 104 | ✅ 100% |
+| `MW01-RSE-Bootcamp` | 62 | ✅ 100% |
+| `polyu-msc-digital-economics` | 32 | ✅ 100% |
+| **Total** | **881** | **✅ 100%** |
 
 **App:** [`app/`](./app/) — Mobile-first PWA in dark mode with HK forum design
 

@@ -74,6 +74,20 @@ export const CourseDetail: FC<Props> = ({ course, isFollowed, isSaved, onFollow,
         </div>
       </div>
 
+      {/* Content coverage notice — some source courses predate the 5MM/3DG
+          format, so all three sections below can legitimately be empty. */}
+      {course.models.length === 0 && course.disagreements.length === 0 && course.scholars.length === 0 && (
+        <section className="px-4 py-3 border-b border-divider">
+          <div className="border border-divider rounded-xl p-4 bg-card">
+            <h2 className="text-accent font-bold mb-1">📄 原文課程</h2>
+            <p className="text-text-dim text-xs leading-relaxed">
+              呢門課屬於早期版本，未有 5 個核心心智模型 / 3 個根本分歧嘅結構化摘要。
+              完整內容請直接喺 GitHub 閱讀原文。
+            </p>
+          </div>
+        </section>
+      )}
+
       {/* 5MM — 5 Mental Models */}
       {course.models.length > 0 && (
         <section className="px-4 py-3 border-b border-divider">

@@ -146,33 +146,107 @@ function extractCourseMeta(filePath, content) {
   // Count Mermaid diagrams
   result.mermaid = (content.match(/```mermaid[\s\S]*?```/g) || []).length;
 
-  // Extract models
-  for (const line of lines) {
-    const mm = line.match(/^##\s+(MM-\d+)/);
-    if (mm) result.models.push(mm[1]);
-    const dd = line.match(/^##\s+(DD-\d+)/);
-    if (dd) result.models.push(dd[1]);
+  // Extract 5 Mental Models / 3 Disagreements.
+  //
+  // Courses do NOT use "## MM-1" style headings (those appear in ~10 lines
+  // repo-wide). Real courses use bilingual prose headings such as:
+  //   ## 問題 1：這個領域所有專家共享的 5 個核心心智模型是什麼？
+  //   ## 問題 2：根本分歧 (3DG)
+  // So we locate the section by its heading text, then collect the numbered
+  // items underneath it. Legacy MM-/DG- codes are still accepted.
+  const section = (headingRe) => {
+    const start = lines.findIndex((l) => /^#{1,4}\s/.test(l) && headingRe.test(l));
+    if (start === -1) return [];
+    const level = (lines[start].match(/^#+/) || ['#'])[0].length;
+    const items = [];
+    let current = null;
+    for (let i = start + 1; i < lines.length; i++) {
+      const l = lines[i];
+      const h = l.match(/^(#{1,6})\s+(.*)/);
+      if (h && h[1].length <= level) break; // next same/higher heading ends section
+      // numbered / bolded item start
+      const item = l.match(/^\s*(?:\d+[.)]|[-*])\s+\*\*(.+?)\*\*/);
+      if (item) {
+        if (current) items.push(current);
+        // "NHST:" is a label for a nested list, not a disagreement itself
+        current = item[1].trim().replace(/[:：]\s*$/, '');
+      }
+    }
+    if (current) items.push(current);
+    return items;
+  };
+
+  // 5MM — 核心心智模型 / core mental models
+  result.models = section(
+    /(MM-\d)|(核心心智模型)|(core\s+mental\s+models?)|(5\s*MM)/i
+  );
+  // Deep dives (DD) are also mental-model style content
+  if (result.models.length === 0) {
+    result.models = section(/(DD-\d)|(深度\s*dive)|(deep\s*dive)/i);
   }
 
-  // Extract disagreements
+  // 3DG — 根本分歧 / disagreements
+  result.disagreements = section(
+    /(DG-\d)|(根本分歧)|(disagreement)|(3\s*DG)/i
+  );
+
+  // Legacy code-style headings (kept for repos that do use them)
   for (const line of lines) {
-    const dg = line.match(/^#{1,3}\s+(DG-\d+)/);
-    if (dg) result.disagreements.push(dg[1]);
+    const mm = line.match(/^#{1,4}\s+(MM-\d+)/);
+    if (mm && !result.models.includes(mm[1])) result.models.push(mm[1]);
+    const dd = line.match(/^#{1,4}\s+(DD-\d+)/);
+    if (dd && !result.models.includes(dd[1])) result.models.push(dd[1]);
+    const dg = line.match(/^#{1,4}\s+(DG-\d+)/);
+    if (dg && !result.disagreements.includes(dg[1])) result.disagreements.push(dg[1]);
   }
+  result.models = result.models.slice(0, 5);
+  result.disagreements = result.disagreements.slice(0, 3);
 
   // Extract scholars (Author Year pattern)
+  //
+  // Two citation styles appear in these courses:
+  //   "Chatfield (1996)"      — parenthetical year
+  //   "Wichern 2007"          — bare trailing year
+  // The previous pattern ([A-Z][A-Za-z...]+ \(\d{4}\)) was greedy enough to
+  // swallow whole sentences ("Explain how Anfinsen's ... experiment"), and a
+  // looser match also swept up non-people ("Paris Agreement (2015)").
+  // So: match a short capitalised name, then reject labels/stopwords.
+  const NON_PERSON = new RegExp([
+    'Agreement', 'Convention', 'Protocol', 'Act', 'Report', 'Standard',
+    'Bridge', 'Method', 'Model', 'Framework', 'Theory', 'Principle',
+    'Equation', 'Formula', 'Approach', 'System', 'Project', 'Course',
+    'Bootcamp', 'Brochure', 'Survey', 'Catalog', 'Manual', 'Guide',
+    'Declaration', 'Charter', 'Treaty', 'Study', 'Analysis', 'Lecture',
+    'War', 'Crisis', 'Event', 'Movement', 'Theory', 'Trend', 'Deepwater',
+  ].join('|'));
+
   const scholars = {};
-  const scholarMatches = content.match(/[A-Z][A-Za-zÀ-ÿ\s.\-']+\s+\((\d{4})\)/g) || [];
-  for (const m of scholarMatches) {
-    const match = m.match(/^([^(]+)\s+\((\d{4})\)/);
-    if (match) {
-      const year = parseInt(match[2]);
-      if (year >= 1800 && year <= 2025) {
-        const name = match[1].trim();
-        if (name.length > 3 && name.length < 60) {
-          scholars[name] = true;
-        }
-      }
+  const STOPWORDS = /^(Explain|Define|Compare|Using|Based|This|The|These|Those|See|From|After|Before|Since|Figure|Table|Section|Chapter|Example|Note|Approach|Result|Method|Step|Part)\b/;
+  const addScholar = (raw) => {
+    const name = raw.trim().replace(/\s+/g, ' ');
+    if (name.length <= 3 || name.length >= 48) return;
+    if (!/^[A-ZÀ-Þ]/.test(name)) return;           // must start capitalised
+    if (!/^[A-Za-zÀ-ÿ'’\-\.\s]+$/.test(name)) return; // letters/spaces only
+    if (NON_PERSON.test(name)) return;
+    if (STOPWORDS.test(name)) return;
+    scholars[name] = true;
+  };
+
+  // "Chatfield (1996)" — note: single surnames are the common case, so the
+  // word group is {0,2} after the first name (not {1,2}).
+  for (const m of content.match(/([A-Z][A-Za-zÀ-ÿ'’\-]+(?:\s+[A-Z][A-Za-zÀ-ÿ'’\-]+){0,2})\s*\(((?:19|20)\d{2})\)/g) || []) {
+    const p = m.match(/^(.+?)\s*\(\d{4}\)/);
+    if (p) {
+      const year = parseInt(p[0].match(/\d{4}/)[0]);
+      if (year >= 1800 && year <= 2025) addScholar(p[1]);
+    }
+  }
+  // "Wichern 2007" (bare year, no parentheses)
+  for (const m of content.match(/([A-Z][A-Za-zÀ-ÿ'’\-]+(?:\s+[A-Z][A-Za-zÀ-ÿ'’\-]+){0,2})\s+((?:19|20)\d{2})\b/g) || []) {
+    const p = m.match(/^(.+?)\s+(?:19|20)\d{2}\b/);
+    if (p) {
+      const year = parseInt(p[0].match(/\d{4}/)[0]);
+      if (year >= 1800 && year <= 2025) addScholar(p[1]);
     }
   }
   result.scholars = Object.keys(scholars).slice(0, 15);
